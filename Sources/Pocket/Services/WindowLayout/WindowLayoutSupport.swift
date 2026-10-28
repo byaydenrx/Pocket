@@ -36,6 +36,8 @@ enum WindowLayoutAction: String, CaseIterable, Identifiable {
     case topLeft, topRight, bottomLeft, bottomRight
     case maximize, marginMaximize, fullScreen, center
     case previousDisplay, nextDisplay, restore
+    // Pocket: Rectangle's Larger / Smaller, growing or shrinking around the center.
+    case larger, smaller
 
     var id: String { rawValue }
 
@@ -50,6 +52,7 @@ enum WindowLayoutAction: String, CaseIterable, Identifiable {
         .topLeft, .topRight, .bottomLeft, .bottomRight,
         .maximize, .marginMaximize, .fullScreen, .center, .restore,
         .previousDisplay, .nextDisplay,
+        .larger, .smaller,
     ]
 
     var supportsShortcut: Bool {
@@ -79,6 +82,8 @@ enum WindowLayoutAction: String, CaseIterable, Identifiable {
         case .bottomRight: return 37
         case .maximize: return 38
         case .center: return 39
+        case .larger: return 90
+        case .smaller: return 91
         case .restore: return 40
         case .leftThird: return 41
         case .centerThird: return 42
@@ -135,6 +140,8 @@ enum WindowLayoutAction: String, CaseIterable, Identifiable {
         case .marginMaximize: return DefaultsKey.windowLayoutShortcutMarginMaximize
         case .fullScreen: return DefaultsKey.windowLayoutShortcutFullScreen
         case .center: return DefaultsKey.windowLayoutShortcutCenter
+        case .larger: return "windowLayoutShortcutLarger"
+        case .smaller: return "windowLayoutShortcutSmaller"
         case .restore: return DefaultsKey.windowLayoutShortcutRestore
         case .leftThird: return DefaultsKey.windowLayoutShortcutLeftThird
         case .centerThird: return DefaultsKey.windowLayoutShortcutCenterThird
@@ -193,7 +200,8 @@ enum WindowLayoutAction: String, CaseIterable, Identifiable {
                 .topThird, .middleThird, .bottomThird, .topTwoThirds, .bottomTwoThirds,
                 .topQuarter, .upperMiddleQuarter, .lowerMiddleQuarter, .bottomQuarter,
                 .leftQuarter, .leftMiddleQuarter, .rightMiddleQuarter, .rightQuarter,
-                .marginMaximize, .fullScreen, .previousDisplay, .centerHalf, .centerTwoThirds:
+                .marginMaximize, .fullScreen, .previousDisplay, .centerHalf, .centerTwoThirds,
+                .larger, .smaller:
             // New actions must never claim a system-wide combination unasked.
             return nil
         }
@@ -250,6 +258,8 @@ enum WindowLayoutAction: String, CaseIterable, Identifiable {
         case .marginMaximize: return text.marginMaximize
         case .fullScreen: return text.fullScreen
         case .center: return text.center
+        case .larger: return "Larger"
+        case .smaller: return "Smaller"
         case .restore: return text.restore
         case .leftThird: return text.leftThird
         case .centerThird: return text.centerThird
@@ -317,6 +327,8 @@ enum WindowLayoutAction: String, CaseIterable, Identifiable {
         case .marginMaximize: return "rectangle.inset.filled"
         case .fullScreen: return "rectangle.fill"
         case .center: return "scope"
+        case .larger: return "plus.magnifyingglass"
+        case .smaller: return "minus.magnifyingglass"
         case .previousDisplay: return "arrow.left.to.line"
         case .nextDisplay: return "arrow.right.to.line"
         case .restore: return "arrow.uturn.backward"
@@ -733,6 +745,15 @@ enum WindowLayoutGeometry {
                           height: height).integral
         case .previousDisplay, .nextDisplay:
             return current.integral
+        case .larger, .smaller:
+            // Rectangle's step: 30 pt on each side, kept on the screen.
+            let step: CGFloat = action == .larger ? 30 : -30
+            var rect = current.insetBy(dx: -step, dy: -step)
+            rect.size.width = min(max(rect.width, 200), visibleFrame.width)
+            rect.size.height = min(max(rect.height, 150), visibleFrame.height)
+            rect.origin.x = min(max(rect.minX, visibleFrame.minX), visibleFrame.maxX - rect.width)
+            rect.origin.y = min(max(rect.minY, visibleFrame.minY), visibleFrame.maxY - rect.height)
+            return rect.integral
         case .restore:
             return current.integral
         case .fullScreen:
@@ -747,7 +768,7 @@ enum WindowLayoutGeometry {
                              visibleFrame: CGRect) -> CGRect {
         guard action != .maximize, action != .restore,
               action != .previousDisplay, action != .nextDisplay,
-              action != .fullScreen else { return targetRect.integral }
+              action != .fullScreen, action != .larger, action != .smaller else { return targetRect.integral }
 
         let size = CGSize(width: max(1, actualSize.width),
                           height: max(1, actualSize.height))
@@ -811,7 +832,7 @@ enum WindowLayoutGeometry {
         case .marginMaximize, .center:
             origin.x = targetRect.midX - size.width / 2
             origin.y = targetRect.midY - size.height / 2
-        case .maximize, .previousDisplay, .nextDisplay, .restore, .fullScreen:
+        case .maximize, .previousDisplay, .nextDisplay, .restore, .fullScreen, .larger, .smaller:
             break
         }
 
@@ -929,6 +950,8 @@ enum WindowLayoutGeometry {
         case .restore:
             return false
         case .fullScreen:
+            return false
+        case .larger, .smaller:
             return false
         }
     }

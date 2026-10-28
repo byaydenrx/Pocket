@@ -391,7 +391,7 @@ struct TimerAlarmView: View {
         HStack(spacing: 12) {
             Image(systemName: "bell.fill")
                 .font(.system(size: 20, weight: .semibold))
-                .symbolEffect(.bounce, options: .repeating)
+                .symbolEffect(.pulse, options: .repeating)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.label.isEmpty ? "Time's up" : model.label)

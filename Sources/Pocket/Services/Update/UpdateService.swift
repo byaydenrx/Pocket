@@ -288,6 +288,18 @@ final class UpdateService: ObservableObject {
                         }
                         return
                     }
+                    // The DMG must carry this project's signature before anything mounts it.
+                    // The release page's asset link, not the redirected download.
+                    guard let assetURL = self.downloadURL,
+                          let signatureURL = URL(string: assetURL.absoluteString + ".sig"),
+                          UpdateSignature.verify(dmg: dmgURL, signatureURL: signatureURL)
+                    else {
+                        try? FileManager.default.removeItem(at: dmgURL)
+                        DispatchQueue.main.async {
+                            self.state = .failed("The update's signature didn't match. Nothing was installed.")
+                        }
+                        return
+                    }
                     DispatchQueue.main.async {
                         self.state = .installing
                         self.launchInstaller(dmgPath: dmgURL.path, offered: offered)
@@ -612,5 +624,35 @@ private struct GitHubRelease: Decodable {
             case browserDownloadURL = "browser_download_url"
             case size
         }
+    }
+}
+
+
+import CryptoKit
+
+/// Checks an update DMG against the Ed25519 signature published beside it.
+enum UpdateSignature {
+    static func verify(dmg: URL, signatureURL: URL) -> Bool {
+        guard let keyData = Data(base64Encoded: AppInfo.updatePublicKey),
+              let key = try? Curve25519.Signing.PublicKey(rawRepresentation: keyData),
+              let data = try? Data(contentsOf: dmg, options: .mappedIfSafe) else { return false }
+        guard let signature = fetch(signatureURL) else { return false }
+        return key.isValidSignature(signature, for: data)
+    }
+
+    private static func fetch(_ url: URL) -> Data? {
+        var result: Data?
+        let done = DispatchSemaphore(value: 0)
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 20
+        URLSession.shared.dataTask(with: request) { data, response, _ in
+            if (response as? HTTPURLResponse)?.statusCode == 200, let data,
+               let text = String(data: data, encoding: .utf8) {
+                result = Data(base64Encoded: text.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+            done.signal()
+        }.resume()
+        _ = done.wait(timeout: .now() + 25)
+        return result
     }
 }

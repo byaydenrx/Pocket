@@ -35,6 +35,9 @@ struct ShelfView: View {
         VStack(alignment: .leading, spacing: 11) {
             header
             tiles
+            if showsImageTools {
+                ShelfImageToolsStrip()
+            }
             if !shelf.items.isEmpty {
                 bottomBar
             }
@@ -66,6 +69,17 @@ struct ShelfView: View {
 
     private var isDropTargeted: Bool {
         shelf.dropTargeted
+    }
+
+    @ObservedObject private var imageTools = ShelfImageToolsModel.shared
+    @AppStorage(ShelfImageToolsModel.enabledKey) private var imageToolsEnabled = true
+
+    /// Tack's strip: while images sit on the shelf, while one is dragged over
+    /// it, and while a job or its result is showing.
+    private var showsImageTools: Bool {
+        guard imageToolsEnabled else { return false }
+        return imageTools.isBusy || imageTools.hasResults || shelf.dropTargeted
+            || !imageTools.shelfImages(shelf).isEmpty
     }
 
     /// The official mark, large and faint in the corner: unmistakably ours,

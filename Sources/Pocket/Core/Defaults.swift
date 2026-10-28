@@ -383,6 +383,10 @@ enum DefaultsKey {
     static let panelToggleLockScreen = "panelToggleLockScreen"
     static let panelToggleDisplayOff = "panelToggleDisplayOff"
     static let panelToggleScreenSaver = "panelToggleScreenSaver"
+    static let panelToggleSleepNow = "panelToggleSleepNow"
+    static let panelToggleDockAutohide = "panelToggleDockAutohide"
+    static let panelToggleClearClipboard = "panelToggleClearClipboard"
+    static let panelToggleRestartFinder = "panelToggleRestartFinder"
 
     // System monitor — live metrics shown next to the menu bar icon (opt-in).
     static let menuBarCPU = "menuBarCPU"
@@ -1223,7 +1227,7 @@ enum Defaults {
         DefaultsKey.keepAwakeMouseJiggleEnabled: false,
         DefaultsKey.keepAwakeMouseJiggleInterval: 5,
         DefaultsKey.hotkeyEnabled: true,
-        DefaultsKey.launchAtLoginWanted: false,
+        DefaultsKey.launchAtLoginWanted: true,
         DefaultsKey.keepAwakeShortcut: "control+option+command:40",
         DefaultsKey.keepAwakeIconTint: KeepAwakeIconTint.dimmed.rawValue,
         DefaultsKey.keepAwakeActiveIcon: KeepAwakeActiveIcon.pocket.rawValue,
@@ -1632,6 +1636,10 @@ enum Defaults {
         DefaultsKey.panelToggleLockScreen: true,
         DefaultsKey.panelToggleDisplayOff: true,
         DefaultsKey.panelToggleScreenSaver: true,
+        DefaultsKey.panelToggleSleepNow: true,
+        DefaultsKey.panelToggleDockAutohide: true,
+        DefaultsKey.panelToggleClearClipboard: true,
+        DefaultsKey.panelToggleRestartFinder: false,
         // Menu bar metrics start off (the icon stays clean) and are opt-in.
         // The panel shows every monitoring block by default; users hide what
         // they don't want.

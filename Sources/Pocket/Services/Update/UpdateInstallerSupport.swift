@@ -62,15 +62,9 @@ enum UpdateInstallerSupport {
             /usr/bin/open "$1"
         }
         while kill -0 "$PID" 2>/dev/null; do sleep 0.3; done
+        # The app checked the DMG's Ed25519 signature before starting this script.
         note fail-dmg-verify
-        DMG_VERIFY_REQ='anchor apple generic and certificate leaf[subject.OU] = "3D485NHW29"'
-        if ! /usr/bin/codesign -v --strict -R="$DMG_VERIFY_REQ" "$DMG" 2>/dev/null; then
-            /bin/rm -f "$DMG"
-            finalize
-            relaunch "$APP"
-            cleanup_script
-            exit 1
-        fi
+        [ -f "$DMG" ] || { finalize; relaunch "$APP"; cleanup_script; exit 1; }
         note fail-tempdir
         MNT="$(/usr/bin/mktemp -d)" || { /bin/rm -f "$DMG"; finalize; relaunch "$APP"; cleanup_script; exit 1; }
         note fail-mount
@@ -114,16 +108,17 @@ enum UpdateInstallerSupport {
                     # When the user disabled Gatekeeper, spctl cannot assess anything
                     # and rejects even a healthy bundle; the codesign identity check
                     # below stays as the gate in that case.
-                    GATEKEEPER_OK=0
-                    if /usr/sbin/spctl --status 2>/dev/null | /usr/bin/grep -q disabled; then
-                        GATEKEEPER_OK=1
-                    elif /usr/sbin/spctl -a -t exec "$STAGE" >/dev/null 2>&1; then
-                        GATEKEEPER_OK=1
-                    fi
-                    VERIFY_REQ='identifier "com.byaydenrx.pocket" and anchor apple generic and certificate leaf[subject.OU] = "3D485NHW29"'
+                    # Pocket is not notarized, so Gatekeeper cannot vouch for it.
+                    # The new bundle must be intact, carry Pocket's identifier and,
+                    # when the installed app is signed with a certificate, satisfy
+                    # that same requirement, so permissions carry over.
+                    VERIFY_REQ='identifier "com.byaydenrx.pocket"'
+                    CURRENT_REQ="$(/usr/bin/codesign -d -r- "$APP" 2>/dev/null | /usr/bin/sed -n 's/^designated => //p')"
+                    case "$CURRENT_REQ" in
+                        *certificate*) VERIFY_REQ="$CURRENT_REQ" ;;
+                    esac
                     note fail-verify
-                    if /usr/bin/codesign -v --deep --strict -R="$VERIFY_REQ" "$STAGE" 2>/dev/null \
-                        && [ "$GATEKEEPER_OK" = 1 ]; then
+                    if /usr/bin/codesign -v --deep --strict -R="$VERIFY_REQ" "$STAGE" 2>/dev/null; then
                         note fail-swap
                         # The backup name is unique per run: after an elevated
                         # install the old bundle is root-owned, a later user-run

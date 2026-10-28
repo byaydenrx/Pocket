@@ -136,6 +136,9 @@ struct ShelfSettings: View {
                     }
                 }
 
+                ShelfImageToolsSettings()
+
+
                 Section(l10n.s.shelfBehaviorTitle) {
                     VStack(alignment: .leading, spacing: 3) {
                         Toggle(l10n.s.shelfCloseAfterDrop, isOn: $closeAfterDrop)

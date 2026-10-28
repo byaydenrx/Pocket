@@ -41,8 +41,6 @@ struct StorageVolume: Identifiable, Hashable {
 final class StorageAnalyzerService: ObservableObject {
     static let shared = StorageAnalyzerService()
 
-    /// How many of a folder's largest files a scan keeps.
-    static let filesKeptPerFolder = 12
 
     @Published private(set) var volumes: [StorageVolume] = []
     @Published private(set) var root: StorageNode?
@@ -153,6 +151,9 @@ final class ScanCounter: @unchecked Sendable {
 }
 
 enum StorageScanner {
+    /// How many of a folder's largest files a scan keeps.
+    static let filesKeptPerFolder = 12
+
     private static let keys: [URLResourceKey] = [.isDirectoryKey, .isSymbolicLinkKey, .totalFileAllocatedSizeKey,
                                                  .fileAllocatedSizeKey, .isPackageKey, .volumeIdentifierKey]
 
@@ -206,10 +207,10 @@ enum StorageScanner {
             if child.isDirectory { folders.append(child) } else { files.append(child) }
         }
         files.sort { $0.size > $1.size }
-        if files.count > StorageAnalyzerService.filesKeptPerFolder {
-            let rest = files[StorageAnalyzerService.filesKeptPerFolder...]
+        if files.count > StorageScanner.filesKeptPerFolder {
+            let rest = files[StorageScanner.filesKeptPerFolder...]
             let restSize = rest.reduce(Int64(0)) { $0 + $1.size }
-            files = Array(files.prefix(StorageAnalyzerService.filesKeptPerFolder))
+            files = Array(files.prefix(StorageScanner.filesKeptPerFolder))
             // One stand-in row carries the size of everything trimmed away.
             let other = StorageNode(url: node.url.appendingPathComponent("\(rest.count) smaller files"),
                                     isDirectory: false, size: restSize, fileCount: rest.count)

@@ -17,6 +17,10 @@ enum AppInfo {
     /// Pocket runs no server: screenshot and recording share links, which uploaded
     /// to the upstream project's server, stay off and out of the interface.
     static let cloudSharingAvailable = false
+    /// Ed25519 public key that update DMGs must be signed with (Tools/update-signing.swift).
+    /// Every release ships `<dmg>.sig` beside the DMG; an update without a valid
+    /// signature is never mounted.
+    static let updatePublicKey = "3u8Cl6z0nAW88jQsFAWvZUta7HB8n2/nLnq9TcWIGCA="
 
     /// The bundle version. The fallback only applies to the bare binary
     /// (e.g. `--selftest`), never the shipped app, which reads its Info.plist.

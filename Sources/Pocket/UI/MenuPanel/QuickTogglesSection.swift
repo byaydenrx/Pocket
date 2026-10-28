@@ -82,6 +82,10 @@ struct QuickTogglesList: View {
     @AppStorage(DefaultsKey.panelToggleLockScreen) private var showLockScreen = true
     @AppStorage(DefaultsKey.panelToggleDisplayOff) private var showDisplayOff = true
     @AppStorage(DefaultsKey.panelToggleScreenSaver) private var showScreenSaver = true
+    @AppStorage(DefaultsKey.panelToggleSleepNow) private var showSleepNow = true
+    @AppStorage(DefaultsKey.panelToggleDockAutohide) private var showDockAutohide = true
+    @AppStorage(DefaultsKey.panelToggleClearClipboard) private var showClearClipboard = true
+    @AppStorage(DefaultsKey.panelToggleRestartFinder) private var showRestartFinder = false
     @AppStorage(DefaultsKey.panelToggleOrder) private var toggleOrderRaw = ""
 
     let editing: Bool
@@ -159,6 +163,10 @@ struct QuickTogglesList: View {
         case .lockScreen: return $showLockScreen
         case .displayOff: return $showDisplayOff
         case .screenSaver: return $showScreenSaver
+        case .sleepNow: return $showSleepNow
+        case .dockAutohide: return $showDockAutohide
+        case .clearClipboard: return $showClearClipboard
+        case .restartFinder: return $showRestartFinder
         }
     }
 
@@ -293,6 +301,52 @@ struct QuickTogglesList: View {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                                         QuickTogglesService.shared.startScreenSaver()
                                     }
+                                })
+        case .sleepNow:
+            UtilityActionButton(title: "Sleep Now",
+                                caption: caption(for: item, idle: "Put the Mac to sleep"),
+                                systemImage: "powersleep",
+                                isEditing: editing,
+                                showsDragHandle: true,
+                                visibility: visibilityBinding(item),
+                                captionStaysVisible: reportsState(item),
+                                action: {
+                                    dismissSurface()
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                        QuickTogglesService.shared.sleepNow()
+                                    }
+                                })
+        case .dockAutohide:
+            UtilityActionButton(title: toggles.dockAutohides ? "Always Show Dock" : "Auto-Hide Dock",
+                                caption: caption(for: item, idle: "The Dock restarts to apply it"),
+                                systemImage: "dock.arrow.down.rectangle",
+                                isEditing: editing,
+                                showsDragHandle: true,
+                                visibility: visibilityBinding(item),
+                                captionStaysVisible: reportsState(item),
+                                action: {
+                                    QuickTogglesService.shared.toggleDockAutohide()
+                                })
+        case .clearClipboard:
+            UtilityActionButton(title: "Clear Clipboard",
+                                caption: caption(for: item, idle: "Empty what is copied right now"),
+                                systemImage: "clipboard",
+                                isEditing: editing,
+                                showsDragHandle: true,
+                                visibility: visibilityBinding(item),
+                                action: {
+                                    QuickTogglesService.shared.clearClipboard()
+                                })
+        case .restartFinder:
+            UtilityActionButton(title: "Restart Finder",
+                                caption: caption(for: item, idle: "For a Finder that hangs or misbehaves"),
+                                systemImage: "arrow.clockwise",
+                                isEditing: editing,
+                                showsDragHandle: true,
+                                visibility: visibilityBinding(item),
+                                captionStaysVisible: reportsState(item),
+                                action: {
+                                    QuickTogglesService.shared.relaunchFinder()
                                 })
         }
     }

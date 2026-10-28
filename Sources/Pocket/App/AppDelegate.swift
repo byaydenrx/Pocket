@@ -78,10 +78,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         // it. Each click still resolves the current process independently.
         _ = AssistiveKeyboard.isRunning
 
-        // Finish the on-disk rename for installs carried over from a pre-2.5
-        // build, or retire a leftover old-named bundle. Returns true when we are
-        // quitting to relaunch under the new name, so skip the rest of startup.
-        if BundleMigration.run() { return }
+        // (Upstream renamed old bundles here; Pocket has no old names, and that
+        // step could have touched an unrelated app, so it is gone.)
 
         DispatchQueue.global(qos: .utility).async {
             RecorderGIFWorkspace.sweep()

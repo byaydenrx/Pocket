@@ -10,6 +10,8 @@ enum QuickToggleAction: String, PanelOrderItem, Identifiable {
     // because it is the tab's headline action (issue request).
     case darkMode, keyboardLight, micMute, emptyTrash, ejectDisks, hiddenFiles, desktopIcons,
          lockScreen, displayOff, screenSaver
+    // Pocket additions
+    case sleepNow, dockAutohide, clearClipboard, restartFinder
 
     var id: String { rawValue }
 
@@ -386,4 +388,51 @@ final class QuickTogglesService: ObservableObject {
         return (unsafeBitCast(getSymbol, to: AppearanceGet.self),
                 unsafeBitCast(setSymbol, to: AppearanceSet.self))
     }()
+}
+
+
+// MARK: - Pocket additions
+
+extension QuickTogglesService {
+    /// Whether the Dock hides itself, read from its preferences.
+    var dockAutohides: Bool {
+        CFPreferencesAppSynchronize("com.apple.dock" as CFString)
+        return (CFPreferencesCopyAppValue("autohide" as CFString, "com.apple.dock" as CFString) as? Bool) ?? false
+    }
+
+    func sleepNow() {
+        guard available, beginRun(.sleepNow) else { return }
+        workQueue.async {
+            let ok = Shell.run("/usr/bin/pmset", ["sleepnow"]).status == 0
+            self.finishRun(.sleepNow, state: ok ? nil : .failed)
+        }
+    }
+
+    /// Flips Dock auto-hide the way System Settings does, then restarts the
+    /// Dock so it takes effect.
+    func toggleDockAutohide() {
+        guard available, beginRun(.dockAutohide) else { return }
+        let target = !dockAutohides
+        workQueue.async {
+            CFPreferencesSetAppValue("autohide" as CFString, target as CFBoolean, "com.apple.dock" as CFString)
+            CFPreferencesAppSynchronize("com.apple.dock" as CFString)
+            let ok = Shell.run("/usr/bin/killall", ["Dock"]).status == 0
+            self.finishRun(.dockAutohide, state: ok ? nil : .failed)
+            DispatchQueue.main.async { self.objectWillChange.send() }
+        }
+    }
+
+    func clearClipboard() {
+        guard available, beginRun(.clearClipboard) else { return }
+        NSPasteboard.general.clearContents()
+        finishRun(.clearClipboard, state: nil)
+    }
+
+    /// For a Finder that hangs or misbehaves.
+    func relaunchFinder() {
+        guard available, beginRun(.restartFinder) else { return }
+        workQueue.async {
+            self.finishRun(.restartFinder, state: self.restartFinder() ? nil : .failed)
+        }
+    }
 }
