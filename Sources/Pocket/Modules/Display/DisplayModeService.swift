@@ -42,6 +42,8 @@ final class DisplayModeService: ObservableObject {
 
     func syncWithPreferences() {
         if AppFeature.display.isAvailable { registerCallback() }
+        // Brightness sliders live here now; the engine follows this feature.
+        BrightnessService.shared.syncWithPreferences()
     }
 
     private func registerCallback() {

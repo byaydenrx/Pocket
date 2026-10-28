@@ -418,7 +418,7 @@ final class BrightnessService: ObservableObject {
     }
 
     func stepKeyboardLight(direction: Int) {
-        guard AppFeature.brightness.isAvailable,
+        guard AppFeature.display.isAvailable,
               UserDefaults.standard.bool(forKey: DefaultsKey.keyboardBrightnessShortcutsEnabled),
               direction != 0,
               let keyboardLightBridge,
@@ -472,7 +472,7 @@ final class BrightnessService: ObservableObject {
     }
 
     func syncWithPreferences() {
-        let wanted = AppFeature.brightness.isAvailable
+        let wanted = AppFeature.display.isAvailable
             && UserDefaults.standard.bool(forKey: DefaultsKey.brightnessControlEnabled)
         if wanted { start() } else if running { stop() }
         syncKeyTap()
@@ -481,7 +481,7 @@ final class BrightnessService: ObservableObject {
     }
 
     private func syncDisplayBrightnessHotkeys() {
-        let enabled = running && AppFeature.brightness.isAvailable
+        let enabled = running && AppFeature.display.isAvailable
             && UserDefaults.standard.bool(forKey: DefaultsKey.displayBrightnessShortcutsEnabled)
         let decrease = GlobalShortcutRole.displayBrightnessDecrease.savedShortcut
         let increase = GlobalShortcutRole.displayBrightnessIncrease.savedShortcut
@@ -500,7 +500,7 @@ final class BrightnessService: ObservableObject {
     }
 
     private func stepDisplayBrightness(delta: Double) {
-        guard running, AppFeature.brightness.isAvailable, SessionActivity.shared.isActive,
+        guard running, AppFeature.display.isAvailable, SessionActivity.shared.isActive,
               UserDefaults.standard.bool(forKey: DefaultsKey.displayBrightnessShortcutsEnabled)
         else { return }
         let pointer = NSEvent.mouseLocation
@@ -522,7 +522,7 @@ final class BrightnessService: ObservableObject {
     }
 
     private func syncKeyboardBrightnessHotkeys() {
-        let enabled = AppFeature.brightness.isAvailable
+        let enabled = AppFeature.display.isAvailable
             && UserDefaults.standard.bool(forKey: DefaultsKey.keyboardBrightnessShortcutsEnabled)
             && keyboardLightBridge != nil
         let decreaseShortcut = GlobalShortcutRole.keyboardBrightnessDecrease.savedShortcut

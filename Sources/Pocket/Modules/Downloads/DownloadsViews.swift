@@ -445,38 +445,27 @@ enum DLFormat {
 }
 
 
-/// Downloads as a menu panel tab: the link field, options and the list, no window.
+/// Downloads as a menu panel tab, laid out for the panel's width: a link
+/// field, two quick options, the list and a status line.
 struct DownloadsSection: View {
     var collapsible = true
     @ObservedObject private var store = DownloadsService.shared.store
     @ObservedObject private var settings = DownloadsService.shared.settings
-    @StateObject private var hover = DLHoverState()
+    @State private var showOptions = false
+    @FocusState private var fieldFocused: Bool
 
     var body: some View {
         PanelSection(.downloads, title: PanelSectionID.downloads.title(L10n.shared.s), collapsible: collapsible) {
-            VStack(spacing: 0) {
-                DLInputBar(store: store, leadingInset: 0)
-                    .padding(.trailing, -12)
-                DLOptionsRow(store: store, settings: settings)
-                    .padding(.horizontal, -16)
-                if store.items.isEmpty {
-                    Text(store.ready ? "Paste a link above, or drop a link or .torrent here." : "Starting aria2…")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, minHeight: 60)
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(store.items) { item in
-                                DLRow(item: item, store: store, hover: hover)
-                                Divider().opacity(0.25)
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 260)
+            VStack(alignment: .leading, spacing: 10) {
+                linkField
+                optionsRow
+                if DLAria2.binary() == nil {
+                    notice("aria2 isn't installed. Install it with Homebrew: brew install aria2", link: DLAria2.installHelp)
+                } else if let problem = store.problem {
+                    notice(problem, link: nil)
                 }
-                DLFooter(store: store)
-                    .padding(.horizontal, -16)
+                list
+                footer
             }
             .onDrop(of: [.fileURL, .url], isTargeted: nil) { providers in
                 DLRootView.load(providers) { store.drop($0) }
@@ -485,5 +474,199 @@ struct DownloadsSection: View {
             .onAppear { DownloadsService.shared.panelAppeared() }
             .onDisappear { DownloadsService.shared.panelDisappeared() }
         }
+    }
+
+    private var canSubmit: Bool {
+        store.ready && !store.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var linkField: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "link").foregroundStyle(.secondary)
+            TextField("Paste a link, magnet or aria2c command", text: $store.input)
+                .textFieldStyle(.plain)
+                .focused($fieldFocused)
+                .onSubmit { if canSubmit { store.submit() } }
+            Button { store.submit() } label: {
+                Image(systemName: "arrow.down.circle.fill").font(.system(size: 18))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(canSubmit ? Color.accentColor : Color.secondary.opacity(0.5))
+            .disabled(!canSubmit)
+            .help("Download")
+        }
+        .font(.system(size: 12.5))
+        .padding(.horizontal, 9)
+        .padding(.vertical, 7)
+        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.primary.opacity(0.07)))
+        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .strokeBorder(Color.primary.opacity(fieldFocused ? 0.25 : 0.08), lineWidth: 1))
+    }
+
+    private var optionsRow: some View {
+        HStack(spacing: 12) {
+            Menu {
+                ForEach([1, 2, 4, 8, 12, 16], id: \.self) { n in
+                    Button { settings.connections = n } label: {
+                        if n == settings.connections { Label("\(n)", systemImage: "checkmark") } else { Text("\(n)") }
+                    }
+                }
+            } label: {
+                Label("\(settings.connections)×", systemImage: "point.3.connected.trianglepath.dotted")
+            }
+            .help("Connections per download")
+            Menu {
+                Button("Choose Folder…") { chooseFolder() }
+                Button("Downloads") { settings.folder = DLSettings.downloads }
+                Button("Desktop") { settings.folder = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0] }
+                Divider()
+                Button("Show in Finder") { NSWorkspace.shared.open(settings.folder) }
+            } label: {
+                Label(settings.folder.lastPathComponent, systemImage: "folder")
+            }
+            .help(settings.folder.path)
+            Spacer()
+            Button { showOptions.toggle() } label: { Image(systemName: "slider.horizontal.3") }
+                .buttonStyle(.borderless)
+                .help("Speed limit, cookies, seeding and aria2c options")
+                .popover(isPresented: $showOptions, arrowEdge: .bottom) { DLSettingsView(settings: settings) }
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize(horizontal: false, vertical: true)
+        .font(.system(size: 11.5))
+        .foregroundStyle(.secondary)
+    }
+
+    @ViewBuilder
+    private var list: some View {
+        if store.items.isEmpty {
+            VStack(spacing: 4) {
+                Image(systemName: "arrow.down.circle").font(.system(size: 22, weight: .light)).foregroundStyle(.tertiary)
+                Text(store.ready || DLAria2.binary() == nil ? "Paste a link above, or drop a link or .torrent here." : "Starting aria2…")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 70)
+        } else {
+            ScrollView {
+                VStack(spacing: 4) {
+                    ForEach(store.items) { item in DLPanelRow(item: item, store: store) }
+                }
+            }
+            .frame(maxHeight: 280)
+        }
+    }
+
+    private var footer: some View {
+        let active = store.items.filter { $0.status == .active || $0.status == .metadata }
+        let paused = store.items.filter { $0.status == .paused }
+        let speed = store.items.reduce(Int64(0)) { $0 + $1.speed }
+        return HStack(spacing: 10) {
+            if !active.isEmpty {
+                Text("\(active.count) downloading · ↓ \(DLFormat.bytes(speed))/s")
+            } else if !store.items.isEmpty {
+                Text("\(store.items.filter { $0.status == .complete }.count) downloaded")
+            }
+            Spacer()
+            if !active.isEmpty { Button("Pause All") { store.pauseAll() } }
+            if !paused.isEmpty { Button("Resume All") { store.resumeAll() } }
+            if store.items.contains(where: \.finished) { Button("Clear") { store.clearFinished() } }
+        }
+        .buttonStyle(.borderless)
+        .font(.system(size: 11).monospacedDigit())
+        .foregroundStyle(.secondary)
+    }
+
+    private func notice(_ text: String, link: URL?) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            Text(text).lineLimit(3)
+            if let link { Link("How", destination: link) }
+            Spacer(minLength: 0)
+        }
+        .font(.caption)
+    }
+
+    private func chooseFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.directoryURL = settings.folder
+        panel.prompt = "Save Here"
+        NSApp.activate(ignoringOtherApps: true)
+        if panel.runModal() == .OK, let url = panel.url { settings.folder = url }
+    }
+}
+
+/// One download, sized for the panel.
+struct DLPanelRow: View {
+    let item: DLItem
+    @ObservedObject var store: DLStore
+    @State private var hovering = false
+
+    private var statusText: String {
+        switch item.status {
+        case .active:
+            let left = item.speed > 0 && item.total > item.done ? " · \(DLFormat.eta(Double(item.total - item.done) / Double(item.speed)))" : ""
+            return "\(Int(item.progress * 100))% · \(DLFormat.bytes(item.speed))/s\(left)"
+        case .metadata: return "Getting torrent info…"
+        case .waiting: return "Waiting"
+        case .paused: return "Paused · \(Int(item.progress * 100))%"
+        case .seeding: return "Seeding · ↑ \(DLFormat.bytes(item.upload))/s"
+        case .complete: return DLFormat.bytes(item.total > 0 ? item.total : item.done)
+        case .error: return item.error ?? "Failed"
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: item.status == .complete ? "checkmark.circle.fill" : item.status == .error ? "exclamationmark.circle.fill" : "arrow.down.circle")
+                .foregroundStyle(item.status == .complete ? Color.green : item.status == .error ? Color.orange : Color.accentColor)
+                .font(.system(size: 14))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.name).lineLimit(1).truncationMode(.middle).font(.system(size: 12))
+                if !item.finished {
+                    ProgressView(value: item.progress).progressViewStyle(.linear).controlSize(.mini)
+                        .tint(item.status == .paused ? .secondary : .accentColor)
+                }
+                Text(statusText).font(.system(size: 10.5).monospacedDigit()).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            HStack(spacing: 4) {
+                switch item.status {
+                case .active, .metadata, .waiting: rowButton("pause.fill", "Pause") { store.pause(item) }
+                case .paused: rowButton("play.fill", "Resume") { store.resume(item) }
+                case .error: rowButton("arrow.clockwise", "Retry") { store.retry(item) }
+                default: EmptyView()
+                }
+                if item.status == .complete { rowButton("magnifyingglass", "Show in Finder") { store.reveal(item) } }
+                rowButton("xmark", item.finished ? "Remove from list" : "Cancel") { store.remove(item) }
+            }
+            .opacity(hovering ? 1 : 0.45)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.primary.opacity(hovering ? 0.08 : 0.04)))
+        .onHover { hovering = $0 }
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { if item.status == .complete { store.open(item) } }
+        .contextMenu {
+            if item.status == .complete { Button("Open") { store.open(item) } }
+            Button("Show in Finder") { store.reveal(item) }
+            if !item.uris.isEmpty { Button("Copy Link") { store.copyLink(item) } }
+            Divider()
+            if item.status == .complete { Button("Move to Trash") { store.remove(item, deleteFile: true) } }
+            Button(item.finished ? "Remove from List" : "Cancel Download") { store.remove(item) }
+        }
+    }
+
+    private func rowButton(_ symbol: String, _ help: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 9, weight: .bold)).frame(width: 20, height: 20)
+                .background(Circle().fill(Color.primary.opacity(0.1)))
+        }
+        .buttonStyle(.plain)
+        .help(help)
     }
 }

@@ -238,7 +238,17 @@ struct GlobalShortcut: Equatable, Hashable {
     static let screenRecorderDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_5),
                                                       modifiers: [.control, .option, .command])
 
+    /// Stored when the user removed a shortcut in Settings › Keyboard Shortcuts.
+    static let removedStorageValue = "none"
+
+    /// What a removed shortcut resolves to: a key no keyboard sends, so the
+    /// hot key or event tap that reads it never fires.
+    static let unassigned = GlobalShortcut(keyCode: 0xFFFF, modifiers: [])
+
+    var isUnassigned: Bool { self == Self.unassigned }
+
     static func saved(for key: String, fallback: GlobalShortcut) -> GlobalShortcut {
+        if UserDefaults.standard.string(forKey: key) == removedStorageValue { return unassigned }
         if let raw = UserDefaults.standard.string(forKey: key),
            let shortcut = GlobalShortcut(storageValue: raw) {
             return shortcut

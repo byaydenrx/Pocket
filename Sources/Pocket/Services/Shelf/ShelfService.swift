@@ -532,6 +532,9 @@ final class ShelfService: ObservableObject {
             }
         }
         if reversals >= 3, travel > 220, t - lastSummon > 1.0 {
+            // Pocket: one shelf at a time. A shake while a shelf is already
+            // up (floating or docked) does nothing.
+            guard !isVisible, !dockedVisible else { shakeSamples.removeAll(); return }
             // Only when content is actually being dragged — not when a window is
             // being moved (nothing droppable, so the shelf shouldn't appear).
             guard isContentDragActive() else { return }
@@ -2510,7 +2513,13 @@ final class ShelfService: ObservableObject {
     func summon() {
         guard AppFeature.shelf.isAvailable,
               UserDefaults.standard.bool(forKey: DefaultsKey.shelfEnabled) else { return }
-        if NotchService.shared.openShelf() { return }
+        // One shelf at a time: when one is already showing, keep it where it
+        // is instead of opening (or moving) a second.
+        if isVisible || dockedVisible {
+            cancelAutoHide()
+            scheduleAutoHideIfIdle()
+            return
+        }
         let panel = ensurePanel()
         cancelAutoHide()
         position(panel)

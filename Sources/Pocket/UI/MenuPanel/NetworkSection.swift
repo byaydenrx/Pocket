@@ -48,6 +48,8 @@ struct NetworkSection: View {
                         }
                     }
                 }
+                Divider()
+                NetworkToolsExtras()
             }
             .panelCard()
         }

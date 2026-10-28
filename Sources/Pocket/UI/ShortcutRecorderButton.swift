@@ -368,6 +368,8 @@ struct ShortcutPreferenceRow: View {
                         ShortcutRecorderButton(shortcut: pendingTakeOver ?? shortcut,
                                                isEnabled: isEnabled,
                                                waitingTitle: l10n.s.shortcutPressKeys,
+                                               emptyTitle: isRemoved && pendingTakeOver == nil ? l10n.s.shortcutNone : nil,
+                                               clearAction: removeShortcut,
                                                notCapturedAction: { errorText = l10n.s.shortcutNotCaptured },
                                                recordingChanged: { recording in
                                                    isRecording = recording
@@ -389,6 +391,16 @@ struct ShortcutPreferenceRow: View {
                                 .hidden()
                                 .accessibilityHidden(true)
                         }
+                        Button {
+                            removeShortcut()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!isEnabled || isRemoved)
+                        .help("Remove this shortcut")
                         Button(l10n.s.shortcutReset) {
                             rawValue = role.defaultShortcut.storageValue
                             errorText = nil
@@ -396,7 +408,7 @@ struct ShortcutPreferenceRow: View {
                             SystemShortcutTakeover.setTakeOver(role.storageKey, false)
                             onChange()
                         }
-                        .disabled(!isEnabled || shortcut == role.defaultShortcut)
+                        .disabled(!isEnabled || (!isRemoved && shortcut == role.defaultShortcut))
                     }
                     if let alternative = superKeyAlternative {
                         Text(String(format: FeatureStrings.shortcuts(l10n.language)
@@ -436,6 +448,16 @@ struct ShortcutPreferenceRow: View {
 
     private var shortcut: GlobalShortcut {
         GlobalShortcut(storageValue: rawValue) ?? role.defaultShortcut
+    }
+
+    private var isRemoved: Bool { rawValue == GlobalShortcut.removedStorageValue }
+
+    private func removeShortcut() {
+        rawValue = GlobalShortcut.removedStorageValue
+        errorText = nil
+        pendingTakeOver = nil
+        SystemShortcutTakeover.setTakeOver(role.storageKey, false)
+        onChange()
     }
 
     private var superKeyAlternative: String? {

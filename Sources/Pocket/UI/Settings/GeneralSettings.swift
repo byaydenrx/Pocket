@@ -326,7 +326,7 @@ struct MenuBarGlyph: View {
 /// system's Clear Liquid Glass) or Tinted, plus a plate for readability.
 struct GlassStyleControls: View {
     @AppStorage(LiquidGlassSupport.styleKey) private var glassStyle = GlassStyle.clear.rawValue
-    @AppStorage(LiquidGlassSupport.tintKey) private var glassTint = 0.0
+    @AppStorage(LiquidGlassSupport.tintKey) private var glassTint = LiquidGlassSupport.defaultTint
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

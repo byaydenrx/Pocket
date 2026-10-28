@@ -173,7 +173,7 @@ private struct PanelGlassSurface: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @AppStorage(DefaultsKey.liquidGlassEnabled) private var liquidGlassEnabled = false
     @AppStorage(LiquidGlassSupport.styleKey) private var glassStyle = GlassStyle.clear.rawValue
-    @AppStorage(LiquidGlassSupport.tintKey) private var glassTint = 0.0
+    @AppStorage(LiquidGlassSupport.tintKey) private var glassTint = LiquidGlassSupport.defaultTint
 
     var body: some View {
         // AppKit hands the hosted panel a safe area for the popover's border and
@@ -203,9 +203,9 @@ private struct PanelGlassSurface: View {
                 .glassEffect(LiquidGlassSupport.glass(styleRaw: glassStyle), in: Rectangle())
                 .overlay(
                     Rectangle()
-                        .fill(PanelSurface.baseFill(for: colorScheme)
+                        .fill((colorScheme == .dark ? Color.black : Color.white)
                             .opacity(LiquidGlassSupport.plateOpacity(styleRaw: glassStyle, tint: glassTint,
-                                                                     fallback: colorScheme == .light ? 0.35 : 0.45)))
+                                                                     fallback: 0)))
                 )
         } else {
             standardSurface

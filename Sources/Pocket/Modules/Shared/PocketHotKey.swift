@@ -124,6 +124,17 @@ struct PocketShortcutRow: View {
                     }
                 )
                 .frame(width: 120)
+                Button {
+                    stored = ""
+                    onChange()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .disabled(current == nil)
+                .help("Remove this shortcut")
             }
             if let error {
                 Text(error).font(.caption).foregroundStyle(.red)

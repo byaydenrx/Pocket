@@ -726,6 +726,13 @@ final class DockPreviewService: ObservableObject {
 
     private func beginSession(_ hit: DockHit) {
         guard !(isPinned && isVisible) else { return }
+        // Pocket: Music's Dock icon belongs to the Now Playing card while it
+        // is on, so the two never stack on top of each other.
+        if hit.app.bundleIdentifier == DockNPMusicBridge.bundleID,
+           MainActor.assumeIsolated({ DockNowPlayingService.shared.isRunning }) {
+            if isVisible { endSession() }
+            return
+        }
         // A prefetched list counts only for the app it was taken for: a hover
         // handed over to a neighbouring icon must not open on the previous
         // app's windows.

@@ -56,6 +56,23 @@ struct ShortcutsSettings: View {
                 }
             }
 
+            if AppFeature.menuBarTimer.isAvailable || AppFeature.downloads.isAvailable {
+                Section("Pocket") {
+                    if AppFeature.menuBarTimer.isAvailable {
+                        PocketShortcutRow(title: "Open the menu bar timer",
+                                          defaultsKey: MenuBarTimerService.shortcutKey,
+                                          fallback: MenuBarTimerService.defaultShortcut) {
+                            MenuBarTimerService.shared.shortcutChanged()
+                        }
+                    }
+                    if AppFeature.downloads.isAvailable {
+                        PocketShortcutRow(title: "Open Downloads", defaultsKey: DownloadsService.shortcutKey, fallback: nil) {
+                            MainActor.assumeIsolated { DownloadsService.shared.shortcutChanged() }
+                        }
+                    }
+                }
+            }
+
             if AppFeature.commandBar.isAvailable {
                 Section {
                     Button {

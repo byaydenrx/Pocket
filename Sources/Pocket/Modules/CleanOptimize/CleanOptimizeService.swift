@@ -149,7 +149,7 @@ struct CleanOptimizeSettings: View {
             Section("Clean") {
                 Text("Caches, logs, developer junk, app leftovers, the Trash and old device backups, with a preview before anything is removed.")
                     .font(.caption).foregroundStyle(.secondary)
-                Button("Open the Cleaner") { SettingsRouter.shared.request(FeatureSettingsDestination(.cleaner)) }
+                CleanerView()
             }
         }
         .formStyle(.grouped)

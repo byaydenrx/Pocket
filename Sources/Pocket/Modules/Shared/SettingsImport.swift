@@ -31,6 +31,14 @@ enum SettingsImport {
             defer { defaults.set(true, forKey: "pocketMigration.allFeaturesPresent.v1") }
             for feature in AppFeature.allCases { defaults.set(true, forKey: feature.availabilityKey) }
         }
+        // Glass with no plate behind it read as empty; start from the
+        // readable default once (the slider still goes lower).
+        if !defaults.bool(forKey: "pocketMigration.glassPlate.v1") {
+            defaults.set(true, forKey: "pocketMigration.glassPlate.v1")
+            if defaults.double(forKey: LiquidGlassSupport.tintKey) < 0.2 {
+                defaults.removeObject(forKey: LiquidGlassSupport.tintKey)
+            }
+        }
     }
 
     // MARK: Vorssaint

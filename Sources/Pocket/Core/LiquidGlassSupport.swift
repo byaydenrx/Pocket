@@ -47,12 +47,14 @@ extension LiquidGlassSupport {
     static let styleKey = "glassStyle"
     /// 0...0.8 of a dark (or light) plate laid over the glass, for readability.
     static let tintKey = "glassTintOpacity"
+    /// Enough plate that text always reads, while the glass still shows.
+    static let defaultTint = 0.35
 
+    /// Every surface uses this one plate, so the panel, switcher, shelf,
+    /// cards and popovers all read the same. `fallback` is ignored on purpose:
+    /// surfaces used to pick their own and ended up looking different.
     static func plateOpacity(styleRaw: String?, tint: Double, fallback: Double) -> Double {
-        switch GlassStyle.sanitized(styleRaw) {
-        case .clear: return min(max(tint, 0), 0.8)
-        case .tinted: return max(fallback, min(max(tint, 0), 0.8))
-        }
+        min(max(tint, 0.12), 0.85)
     }
 }
 

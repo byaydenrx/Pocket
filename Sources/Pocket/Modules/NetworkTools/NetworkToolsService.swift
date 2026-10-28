@@ -195,3 +195,41 @@ struct NetworkToolsSettings: View {
         .formStyle(.grouped)
     }
 }
+
+
+/// The tools that the Network monitor did not already have (Wi-Fi details
+/// and ping), shown inside it so network lives on one page.
+struct NetworkToolsExtras: View {
+    @ObservedObject private var service = NetworkToolsService.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !service.wifi.isEmpty {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("WI-FI").font(.caption2.weight(.semibold)).foregroundStyle(.tertiary)
+                    ForEach(service.wifi, id: \.0) { item in
+                        HStack {
+                            Text(item.0).foregroundStyle(.secondary)
+                            Spacer()
+                            Text(item.1).monospaced().lineLimit(1)
+                        }
+                    }
+                }
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text("PING").font(.caption2.weight(.semibold)).foregroundStyle(.tertiary)
+                HStack {
+                    TextField("Host", text: $service.pingHost)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit { service.ping() }
+                    Button(service.pinging ? "…" : "Ping") { service.ping() }.disabled(service.pinging)
+                }
+                if let output = service.pingOutput {
+                    Text(output).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                }
+            }
+        }
+        .font(.system(size: 11))
+        .onAppear { service.refresh() }
+    }
+}

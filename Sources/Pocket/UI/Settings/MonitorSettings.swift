@@ -65,6 +65,11 @@ struct MonitorSettings: View {
                     groupHeading(FeatureStrings.monitorLayout(l10n.language).shared, symbol: "slider.horizontal.3")
                     readingsCard
                     alertsCard
+                    groupHeading("Network Tools", symbol: "network")
+                    SettingsCard {
+                        NetworkToolsView()
+                            .padding(.vertical, 4)
+                    }
                 }
                 .frame(maxWidth: 760)
                 .frame(maxWidth: .infinity)

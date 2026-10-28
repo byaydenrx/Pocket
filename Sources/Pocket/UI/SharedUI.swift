@@ -175,7 +175,7 @@ struct HUDBackdrop: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @AppStorage(DefaultsKey.liquidGlassEnabled) private var liquidGlassEnabled = false
     @AppStorage(LiquidGlassSupport.styleKey) private var glassStyle = GlassStyle.clear.rawValue
-    @AppStorage(LiquidGlassSupport.tintKey) private var glassTint = 0.0
+    @AppStorage(LiquidGlassSupport.tintKey) private var glassTint = LiquidGlassSupport.defaultTint
 
     private var materialOpacity: Double {
         reduceTransparency ? 1 : min(max(opacity, 0), 1)
