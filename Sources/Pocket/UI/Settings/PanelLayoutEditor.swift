@@ -39,6 +39,10 @@ struct PanelLayoutEditor: View {
             }
         }
         .onAppear { order = PanelLayout.order }
+        .onReceive(NotificationCenter.default.publisher(for: PanelCustomTabs.changed)) { _ in
+            order = PanelLayout.order
+            visibilityChanges += 1
+        }
         .onChange(of: showFanControl) { _, _ in order = PanelLayout.order }
     }
 
@@ -60,6 +64,32 @@ struct PanelLayoutEditor: View {
     private var rows: some View {
         let ids = editableOrder
         return VStack(spacing: 0) {
+            HStack {
+                Text("Drag to reorder. Rename with the pencil.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Menu {
+                    let pinned = Set(PanelCustomTabs.pinnedPages.map { String(describing: $0) })
+                    ForEach(PanelCustomTabs.entries.filter { !pinned.contains(String(describing: $0.page)) }, id: \.title) { entry in
+                        Button {
+                            PanelCustomTabs.add(entry.page)
+                            order = PanelLayout.order
+                            visibilityChanges += 1
+                        } label: {
+                            Label(entry.title, systemImage: entry.icon)
+                        }
+                    }
+                } label: {
+                    Label("Add Tab", systemImage: "plus")
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .disabled(PanelCustomTabs.pinnedPages.count >= PanelCustomTabs.slots.count)
+                .help("Put any Settings page in the menu panel as its own tab")
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 6)
             ForEach(ids) { id in
                 PanelSectionRow(id: id,
                                 title: id.title(l10n.s),
@@ -122,6 +152,8 @@ private extension PanelSectionID {
         switch self {
         case .reminders: return "Your Reminders lists: check off, add and see what is due."
         case .downloads: return "Paste links, magnets or torrents and watch them download."
+        case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
+            return "A Settings page you pinned to the panel."
         case .keepAwake: return text.sectionKeepAwake
         case .brightness: return text.sectionDisplays
         case .mixer: return text.sectionMixer
@@ -240,6 +272,13 @@ private struct PanelSectionRow: View {
                             renaming = false
                         }
                         .disabled(customTitle.isEmpty)
+                        if id.isCustomTab {
+                            Button("Remove Tab", role: .destructive) {
+                                PanelCustomTabs.remove(id)
+                                renaming = false
+                                onVisibilityChange()
+                            }
+                        }
                         Spacer()
                         Button("Done", action: commitTitle)
                             .keyboardShortcut(.defaultAction)

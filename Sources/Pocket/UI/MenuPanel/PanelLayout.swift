@@ -14,6 +14,8 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
          toggles, wallpaper
     // Pocket additions
     case reminders, downloads
+    /// Slots for any Settings page the user pins to the panel as a tab.
+    case custom1, custom2, custom3, custom4, custom5, custom6, custom7, custom8
 
     var id: String { rawValue }
 
@@ -26,6 +28,8 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     /// Localized display name, reused from the existing section titles.
     func defaultTitle(_ s: Strings) -> String {
         switch self {
+        case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
+            return PanelCustomTabs.page(for: self).flatMap(PanelCustomTabs.entry(for:))?.title ?? "Tab"
         case .reminders: return "Reminders"
         case .downloads: return "Downloads"
         case .keepAwake: return s.keepAwakeTitle
@@ -45,6 +49,8 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
 
     var symbolName: String {
         switch self {
+        case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
+            return PanelCustomTabs.page(for: self).flatMap(PanelCustomTabs.entry(for:))?.icon ?? "square.dashed"
         case .reminders: return "checklist"
         case .downloads: return "arrow.down.circle"
         case .keepAwake: return "moon.zzz.fill"
@@ -67,6 +73,8 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     /// get a dedicated `panelShow*` key so every section is hideable.
     var visibilityKey: String {
         switch self {
+        case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
+            return "panelShow.\(rawValue)"
         case .reminders: return DefaultsKey.remindersEnabled
         case .downloads: return "panelShowDownloads"
         case .keepAwake: return DefaultsKey.panelShowKeepAwake
@@ -93,6 +101,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     /// feature's return).
     var featureGate: [AppFeature] {
         switch self {
+        case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8: return []
         case .reminders: return [.reminders]
         case .downloads: return [.downloads]
         case .keepAwake: return [.keepAwake]
@@ -117,7 +126,12 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    var isAvailable: Bool { featureGate.contains(where: \.isAvailable) }
+    var isAvailable: Bool {
+        if isCustomTab { return PanelCustomTabs.page(for: self) != nil }
+        return featureGate.contains(where: \.isAvailable)
+    }
+
+    var isCustomTab: Bool { PanelCustomTabs.slots.contains(self) }
 }
 
 /// Persisted panel layout: the order the sections appear in and which ones are
@@ -518,5 +532,70 @@ struct PanelHiddenItemRow: View {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
                 .fill(Color.primary.opacity(0.035))
         )
+    }
+}
+
+
+/// Settings pages pinned to the menu panel as tabs ("put it together
+/// yourself"). Each slot remembers one page by name.
+enum PanelCustomTabs {
+    static let slots: [PanelSectionID] = [.custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8]
+    static let changed = Notification.Name("PocketPanelCustomTabsChanged")
+
+    struct Entry { let page: SettingsPage; let title: String; let icon: String }
+
+    private static func key(_ slot: PanelSectionID) -> String { "panelCustomTab.\(slot.rawValue)" }
+
+    /// Every page that can become a tab, with its title and icon.
+    static var entries: [Entry] {
+        SettingsDirectory.sections(L10n.shared.s, language: L10n.shared.language)
+            .flatMap(\.items)
+            .filter { FeatureVisibilitySupport.isPageVisible($0.page, isAvailable: { $0.isAvailable }) }
+            .map { Entry(page: $0.page, title: $0.title, icon: $0.icon) }
+    }
+
+    static func entry(for page: SettingsPage) -> Entry? {
+        entries.first { $0.page == page }
+    }
+
+    static func page(for slot: PanelSectionID) -> SettingsPage? {
+        guard let name = UserDefaults.standard.string(forKey: key(slot)) else { return nil }
+        return entries.first { String(describing: $0.page) == name }?.page
+    }
+
+    static var pinnedPages: [SettingsPage] { slots.compactMap(page(for:)) }
+
+    /// Pins a page into the first free slot and shows it at the end of the tabs.
+    static func add(_ page: SettingsPage) {
+        guard !pinnedPages.contains(page),
+              let slot = slots.first(where: { Self.page(for: $0) == nil }) else { return }
+        UserDefaults.standard.set(String(describing: page), forKey: key(slot))
+        UserDefaults.standard.set(true, forKey: slot.visibilityKey)
+        var order = PanelLayout.order.filter { $0 != slot }
+        order.append(slot)
+        PanelLayout.setOrder(order)
+        NotificationCenter.default.post(name: changed, object: nil)
+    }
+
+    static func remove(_ slot: PanelSectionID) {
+        UserDefaults.standard.removeObject(forKey: key(slot))
+        PanelLayout.setCustomTitle(nil, for: slot)
+        NotificationCenter.default.post(name: changed, object: nil)
+    }
+}
+
+/// A pinned Settings page inside the panel.
+struct PanelCustomTabSection: View {
+    let slot: PanelSectionID
+    var collapsible = true
+
+    var body: some View {
+        if let page = PanelCustomTabs.page(for: slot) {
+            PanelSection(slot, title: slot.title(L10n.shared.s), collapsible: collapsible) {
+                SettingsPageContent(page: page)
+                    .frame(height: 440)
+                    .scrollContentBackground(.hidden)
+            }
+        }
     }
 }

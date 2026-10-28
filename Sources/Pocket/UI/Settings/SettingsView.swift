@@ -573,45 +573,8 @@ struct SettingsView: View {
             } else {
                 GeneralSettings()
             }
-        case .features: PocketPermissionsPage()
-        case .textSnippets: TextSnippetsSettings()
-        case .notch: NotchSettings()
-        case .notchMascot: NotchMascotSettings()
-        case .radialMenu: RadialMenuSettings()
-        case .commandBar: CommandBarSettings()
-        case .energy: EnergySettings(focus: router.destination.sectionAnchor)
-        case .monitor: MonitorSettings()
-        case .mouse: MouseSettings()
-        case .switcher: SwitcherSettings()
-        case .dock: DockSettings()
-        case .keyDebounce: KeyboardDebounceSettings()
-        case .superKey: SuperKeySettings()
-        case .cutPaste: CutPasteSettings()
-        case .autoQuit: AutoQuitSettings()
-        case .quitProtection: QuitProtectionSettings()
-        case .uninstaller: UninstallerView()
-        case .killProcess: KillProcessView()
-        case .portManager: PortManagerView()
-        case .urlCleaner: URLCleanerSettings()
-        case .cleaner: CleanerSettings()
-        case .homebrew: HomebrewSettings()
-        case .appUpdates: AppUpdatesSettings()
-        case .media: MediaSettings()
-        case .clipboard: ClipboardSettings()
-        case .quickTools: QuickToolsSettings()
-        case .screenshot: ScreenCaptureSettings()
-        case .windowLayout: WindowLayoutSettings()
-        case .shelf: ShelfSettings()
-        case .shortcuts: ShortcutsSettings()
-        case .advanced: AdvancedSettings()
-        case .about: AboutSettings()
-        case .releaseNotes: ReleaseNotesSettings()
-        case .support: SupportSettings()
-        case .menuBarTimer: MenuBarTimerSettings()
-        case .downloads: DownloadsSettings()
-        case .dockNowPlaying: DockNowPlayingSettings()
-        case .reminders: RemindersSettings()
-        case .storageAnalyzer: StorageAnalyzerSettings()
+        default:
+            SettingsPageContent(page: router.page, anchor: router.destination.sectionAnchor)
         }
     }
 }
@@ -1261,5 +1224,58 @@ private extension View {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(isSelected ? Color.accentColor.opacity(0.18) : .clear)
             }
+    }
+}
+
+
+/// One Settings page's content, shared by the Settings window and the menu
+/// panel's custom tabs (any page can be pinned to the panel).
+struct SettingsPageContent: View {
+    let page: SettingsPage
+    var anchor: SettingsSectionAnchor? = nil
+
+    var body: some View {
+        switch page {
+        case .general: GeneralSettings()
+        case .features: PocketPermissionsPage()
+        case .textSnippets: TextSnippetsSettings()
+        case .notch: NotchSettings()
+        case .notchMascot: NotchMascotSettings()
+        case .radialMenu: RadialMenuSettings()
+        case .commandBar: CommandBarSettings()
+        case .energy: EnergySettings(focus: anchor)
+        case .monitor: MonitorSettings()
+        case .mouse: MouseSettings()
+        case .switcher: SwitcherSettings()
+        case .dock: DockSettings()
+        case .keyDebounce: KeyboardDebounceSettings()
+        case .superKey: SuperKeySettings()
+        case .cutPaste: CutPasteSettings()
+        case .autoQuit: AutoQuitSettings()
+        case .quitProtection: QuitProtectionSettings()
+        case .uninstaller: UninstallerView()
+        case .killProcess: KillProcessView()
+        case .portManager: PortManagerView()
+        case .urlCleaner: URLCleanerSettings()
+        case .cleaner: CleanerSettings()
+        case .homebrew: HomebrewSettings()
+        case .appUpdates: AppUpdatesSettings()
+        case .media: MediaSettings()
+        case .clipboard: ClipboardSettings()
+        case .quickTools: QuickToolsSettings()
+        case .screenshot: ScreenCaptureSettings()
+        case .windowLayout: WindowLayoutSettings()
+        case .shelf: ShelfSettings()
+        case .shortcuts: ShortcutsSettings()
+        case .advanced: AdvancedSettings()
+        case .about: AboutSettings()
+        case .releaseNotes: ReleaseNotesSettings()
+        case .support: SupportSettings()
+        case .menuBarTimer: MenuBarTimerSettings()
+        case .downloads: DownloadsSettings()
+        case .dockNowPlaying: DockNowPlayingSettings()
+        case .reminders: RemindersSettings()
+        case .storageAnalyzer: StorageAnalyzerSettings()
+        }
     }
 }

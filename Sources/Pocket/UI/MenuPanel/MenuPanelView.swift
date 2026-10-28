@@ -306,6 +306,7 @@ struct MenuPanelView: View {
         case .wallpaper: return 480
         case .reminders: return 320
         case .downloads: return 380
+        case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8: return 480
         }
     }
 
@@ -351,6 +352,8 @@ struct MenuPanelView: View {
         case .wallpaper: if showWallpaper { WallpaperSection(collapsible: collapsible) }
         case .reminders: RemindersSection(collapsible: collapsible)
         case .downloads: DownloadsSection(collapsible: collapsible)
+        case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
+            PanelCustomTabSection(slot: id, collapsible: collapsible)
         }
     }
 
