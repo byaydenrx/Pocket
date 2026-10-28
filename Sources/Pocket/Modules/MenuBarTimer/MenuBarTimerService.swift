@@ -80,12 +80,19 @@ enum TimerMenuIcon {
         return choices.contains { $0.symbol == saved } ? saved : "hourglass"
     }
 
+    /// Drawn centered on a fixed menu-bar-sized canvas so every symbol sits
+    /// in the middle of the item, whatever padding the symbol itself carries.
     static func image(_ symbol: String) -> NSImage? {
-        // The dot is drawn smaller so it sits like a status light rather than a blob.
-        let size: CGFloat = symbol == "circle.fill" ? 7 : 13
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Timer")?
-            .withSymbolConfiguration(.init(pointSize: size, weight: .medium))
-        image?.isTemplate = true
+        let size: CGFloat = symbol == "circle.fill" ? 7 : 14
+        guard let glyph = NSImage(systemSymbolName: symbol, accessibilityDescription: "Timer")?
+            .withSymbolConfiguration(.init(pointSize: size, weight: .medium)) else { return nil }
+        let canvas = NSSize(width: 18, height: 18)
+        let image = NSImage(size: canvas, flipped: false) { rect in
+            let g = glyph.size
+            glyph.draw(in: NSRect(x: rect.midX - g.width / 2, y: rect.midY - g.height / 2, width: g.width, height: g.height))
+            return true
+        }
+        image.isTemplate = true
         return image
     }
 }
@@ -145,6 +152,7 @@ final class MenuBarTimerService: NSObject, NSPopoverDelegate {
         popover.behavior = .applicationDefined
         popover.animates = true
         popover.delegate = self
+        popover.hasFullSizeContent = PanelSurface.popoverHostsFullSizeContent
         let host = TimerFirstClickHostingView(rootView: TimerPopoverView(model: model))
         host.sizingOptions = []
         hosting = host
@@ -303,6 +311,7 @@ final class MenuBarTimerService: NSObject, NSPopoverDelegate {
         fitPopover()
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        PocketGlassChrome.clearSystemMaterial(of: popover)
         button.highlight(true)
         if let window = popover.contentViewController?.view.window {
             window.makeKey()

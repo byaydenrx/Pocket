@@ -99,6 +99,10 @@ final class AutoQuitService: ObservableObject {
         running = true
 
         let center = NSWorkspace.shared.notificationCenter
+        spaceToken = center.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification,
+                                        object: nil, queue: .main) { _ in
+            AutoQuitService.lastSpaceChange = Date()
+        }
         launchToken = center.addObserver(forName: NSWorkspace.didLaunchApplicationNotification,
                                          object: nil, queue: .main) { [weak self] note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
@@ -145,6 +149,8 @@ final class AutoQuitService: ObservableObject {
         if let launchToken { center.removeObserver(launchToken) }
         if let terminateToken { center.removeObserver(terminateToken) }
         if let activateToken { center.removeObserver(activateToken) }
+        if let spaceToken { center.removeObserver(spaceToken) }
+        spaceToken = nil
         if let spaceChangeToken { center.removeObserver(spaceChangeToken) }
         launchToken = nil
         terminateToken = nil
@@ -323,11 +329,26 @@ final class AutoQuitService: ObservableObject {
     /// The user's wait before an app with no windows quits (Settings slider).
     /// It doubles as the guard against the zero-window flicker of leaving full
     /// screen, so it never drops below a sliver.
-    static let defaultDelay: TimeInterval = 0.5
-    static var confirmDelay: TimeInterval {
+    static let defaultDelay: TimeInterval = 0
+    static var userDelay: TimeInterval {
         let stored = UserDefaults.standard.object(forKey: DefaultsKey.autoQuitDelay) as? Double
-        return min(max(stored ?? defaultDelay, 0.15), 30)
+        return min(max(stored ?? defaultDelay, 0), 30)
     }
+
+    /// Instant mode: the slider at its start. Checks begin right after the
+    /// close and the only wait left is the full-screen guard below.
+    static var isInstant: Bool { userDelay < 0.2 }
+
+    static var confirmDelay: TimeInterval {
+        // Leaving full screen destroys the full-screen window a moment before
+        // the windowed one comes back. A Space change in the last second and a
+        // half means that may be happening, so wait it out even when instant.
+        if Date().timeIntervalSince(lastSpaceChange) < 1.5 { return max(userDelay, 1.2) }
+        return isInstant ? 0.08 : userDelay
+    }
+
+    static var lastSpaceChange = Date.distantPast
+    private var spaceToken: NSObjectProtocol?
 
     /// Accessibility can list no windows for an app the window server still
     /// shows one for: it answers late for an app that is busy, and it cannot
@@ -348,7 +369,8 @@ final class AutoQuitService: ObservableObject {
         if let last = lastScheduledChecks[pid], now.timeIntervalSince(last) < 0.25 { return }
         lastScheduledChecks[pid] = now
         let origin = DispatchTime.now()
-        for offset in Self.closeCheckOffsets {
+        let offsets = Self.isInstant ? [0.06, 0.2, 0.45, 1.0] : Self.closeCheckOffsets
+        for offset in offsets {
             DispatchQueue.main.asyncAfter(deadline: origin + offset) { [weak self] in
                 self?.checkWindows(pid: pid)
             }

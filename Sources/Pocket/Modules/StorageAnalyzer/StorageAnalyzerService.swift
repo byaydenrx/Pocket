@@ -61,10 +61,17 @@ final class StorageAnalyzerService: ObservableObject {
         let keys: [URLResourceKey] = [.volumeNameKey, .volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey,
                                       .volumeAvailableCapacityKey, .volumeIsInternalKey, .volumeIsBrowsableKey]
         let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) ?? []
-        volumes = urls.compactMap { url in
+        volumes = urls.compactMap { listed in
+            // A fresh URL, so cached resource values never show stale space.
+            var url = URL(fileURLWithPath: listed.path)
+            url.removeAllCachedResourceValues()
             guard let values = try? url.resourceValues(forKeys: Set(keys)), values.volumeIsBrowsable != false,
                   let total = values.volumeTotalCapacity, total > 0 else { return nil }
-            let available = values.volumeAvailableCapacityForImportantUsage ?? Int64(values.volumeAvailableCapacity ?? 0)
+            // "Important usage" is 0 on non-APFS drives (exFAT, HFS+, NTFS):
+            // fall back to the plain free space there.
+            let important = values.volumeAvailableCapacityForImportantUsage ?? 0
+            let plain = Int64(values.volumeAvailableCapacity ?? 0)
+            let available = important > 0 ? important : plain
             return StorageVolume(url: url, name: values.volumeName ?? url.lastPathComponent, total: Int64(total),
                                  available: available, isInternal: values.volumeIsInternal ?? false)
         }
@@ -112,6 +119,7 @@ final class StorageAnalyzerService: ObservableObject {
                 self.largestFiles = largest
                 self.scannedFiles = counter.value
                 self.scanning = false
+                self.refreshVolumes()
             }
         }
         activeCounter = counter

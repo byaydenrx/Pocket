@@ -155,3 +155,22 @@ extension View {
 #endif
     }
 }
+
+extension View {
+    /// A small round Liquid Glass chip (close buttons and badges over previews);
+    /// a frosted circle before macOS 26.
+    @ViewBuilder
+    func pocketGlassCircle(highlighted: Bool = false) -> some View {
+#if compiler(>=6.2)
+        if #available(macOS 26.0, *) {
+            glassEffect(.clear.interactive(), in: Circle())
+                .overlay(Circle().fill(Color.white.opacity(highlighted ? 0.14 : 0)))
+        } else {
+            background(Circle().fill(.ultraThinMaterial))
+                .overlay(Circle().strokeBorder(Color.white.opacity(0.3), lineWidth: 0.6))
+        }
+#else
+        background(Circle().fill(.ultraThinMaterial))
+#endif
+    }
+}

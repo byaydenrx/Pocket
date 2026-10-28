@@ -1400,7 +1400,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     // The SwiftUI panel reports which monitor sections are actually visible; the
     // popover callback only handles update freshness.
     func popoverWillShow(_ notification: Notification) {
+        PocketGlassChrome.clearSystemMaterial(of: popover)
         DispatchQueue.main.async {
+            PocketGlassChrome.clearSystemMaterial(of: self.popover)
             NotificationCenter.default.post(name: .menuPanelWillShow, object: nil)
         }
         SystemMonitor.shared.suppressGPUReadsForTransientUI()

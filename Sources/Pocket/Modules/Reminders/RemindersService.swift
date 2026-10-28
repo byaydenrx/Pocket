@@ -217,6 +217,7 @@ final class RemindersService: NSObject, ObservableObject, NSPopoverDelegate {
             item.button?.imagePosition = .imageLeading
             statusItem = item
             popover.behavior = .transient
+            popover.hasFullSizeContent = PanelSurface.popoverHostsFullSizeContent
             popover.delegate = self
             let host = NSHostingController(rootView: RemindersPopover())
             host.sizingOptions = [.preferredContentSize]
@@ -249,6 +250,7 @@ final class RemindersService: NSObject, ObservableObject, NSPopoverDelegate {
             refresh()
             NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            PocketGlassChrome.clearSystemMaterial(of: popover)
         }
     }
 }

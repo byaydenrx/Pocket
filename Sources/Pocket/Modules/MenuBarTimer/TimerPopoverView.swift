@@ -36,6 +36,7 @@ struct TimerPopoverView: View {
         .background(GeometryReader { geo in Color.clear.preference(key: TimerHeightKey.self, value: geo.size.height) })
         .onPreferenceChange(TimerHeightKey.self) { height in MainActor.assumeIsolated { model.onHeight?(height) } }
         .frame(maxHeight: .infinity, alignment: .top)
+        .panelGlassSurface()
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             for provider in providers {
                 _ = provider.loadObject(ofClass: URL.self) { url, _ in

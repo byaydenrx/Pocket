@@ -1212,12 +1212,11 @@ private struct WindowCard: View {
                 suppressNextCommit = false
             }
         } label: {
-            Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 19, weight: .medium))
-                .symbolRenderingMode(.palette)
-                .foregroundStyle(Color.white.opacity(isCloseHovering ? 0.95 : 0.72),
-                                 Color(red: 1.0, green: 0.38, blue: 0.33).opacity(isCloseHovering ? 1 : 0.92))
-                .frame(width: 26, height: 26)
+            Image(systemName: "xmark")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color.white.opacity(isCloseHovering ? 1 : 0.85))
+                .frame(width: 24, height: 24)
+                .pocketGlassCircle(highlighted: isCloseHovering)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
