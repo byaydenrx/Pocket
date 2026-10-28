@@ -180,6 +180,10 @@ enum DefaultsKey {
     static let diskImageInstallerUseUserApplications = "diskImageInstallerUseUserApplications"
     static let autoQuitEnabled = "autoQuitEnabled"
     static let autoQuitDelay = "autoQuitDelay"  // seconds to wait after the last window closes
+    // Pocket modules
+    static let menuBarTimerEnabled = "menuBarTimerEnabled"
+    static let dockNowPlayingEnabled = "dockNowPlayingEnabled"
+    static let remindersEnabled = "remindersEnabled"
     static let autoQuitExceptions = "autoQuitExceptions"  // [bundle id] kept running
     static let autoQuitDockApps = "autoQuitDockApps"  // [bundle id] menu bar apps explicitly allowed to quit in the Dock
     // Quit/close protection: each shortcut owns its full configuration and app list.

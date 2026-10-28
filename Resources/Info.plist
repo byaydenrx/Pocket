@@ -50,6 +50,8 @@
 	<string>Pocket records your microphone only when you turn it on for a screen recording. The audio stays on your Mac unless you choose to create a temporary link.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Show your upcoming appointments in the notch. Calendar events stay on this Mac.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Show your reminders in the menu bar and panel so you can check them off and add new ones. Reminders stay on this Mac.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Pocket shows your camera only in the preview window you open, so you can check how you look before a call. Nothing is recorded or leaves your Mac.</string>
 	<key>NSDownloadsFolderUsageDescription</key>

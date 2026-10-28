@@ -120,6 +120,7 @@ struct PanelLayoutEditor: View {
 private extension PanelSectionID {
     func description(_ text: GeneralSettingsStrings) -> String {
         switch self {
+        case .reminders: return "Your Reminders lists: check off, add and see what is due."
         case .keepAwake: return text.sectionKeepAwake
         case .brightness: return text.sectionDisplays
         case .mixer: return text.sectionMixer
@@ -153,6 +154,9 @@ private struct PanelSectionRow: View {
     let onHover: (Bool) -> Void
     let onVisibilityChange: () -> Void
     @AppStorage private var shown: Bool
+    @AppStorage private var customTitle: String
+    @State private var renaming = false
+    @State private var draftTitle = ""
 
     init(id: PanelSectionID, title: String, description: String, isActive: Bool, isHovered: Bool,
          isDragging: Bool, showsSwitch: Bool, canHide: Bool, dragProvider: @escaping () -> NSItemProvider,
@@ -171,6 +175,18 @@ private struct PanelSectionRow: View {
         self.onHover = onHover
         self.onVisibilityChange = onVisibilityChange
         _shown = AppStorage(wrappedValue: id.shownByDefault, id.visibilityKey)
+        _customTitle = AppStorage(wrappedValue: "", "panelSectionTitle.\(id.rawValue)")
+    }
+
+    private var shownTitle: String {
+        let trimmed = customTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? id.defaultTitle(L10n.shared.s) : trimmed
+    }
+
+    private func commitTitle() {
+        let trimmed = draftTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        PanelLayout.setCustomTitle(trimmed == id.defaultTitle(L10n.shared.s) ? nil : trimmed, for: id)
+        renaming = false
     }
 
     var body: some View {
@@ -187,7 +203,7 @@ private struct PanelSectionRow: View {
                     .background((shown ? Color.accentColor : Color.secondary).opacity(0.12),
                                 in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(title)
+                    Text(shownTitle)
                         .font(.callout.weight(.medium))
                         .foregroundStyle(shown ? .primary : .secondary)
                     Text(description)
@@ -199,6 +215,37 @@ private struct PanelSectionRow: View {
             }
             .contentShape(Rectangle())
             .onDrag(dragProvider)
+            Button {
+                draftTitle = shownTitle
+                renaming = true
+            } label: {
+                Image(systemName: "pencil")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.borderless)
+            .help("Rename section")
+            .opacity(isHovered || renaming || !customTitle.isEmpty ? 1 : 0)
+            .popover(isPresented: $renaming, arrowEdge: .bottom) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Section title").font(.headline)
+                    TextField(id.defaultTitle(L10n.shared.s), text: $draftTitle)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 220)
+                        .onSubmit(commitTitle)
+                    HStack {
+                        Button("Reset") {
+                            PanelLayout.setCustomTitle(nil, for: id)
+                            renaming = false
+                        }
+                        .disabled(customTitle.isEmpty)
+                        Spacer()
+                        Button("Done", action: commitTitle)
+                            .keyboardShortcut(.defaultAction)
+                    }
+                }
+                .padding(14)
+            }
             if showsSwitch {
                 Toggle(title, isOn: $shown)
                     .labelsHidden()

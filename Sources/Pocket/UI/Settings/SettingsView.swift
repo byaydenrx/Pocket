@@ -607,6 +607,11 @@ struct SettingsView: View {
         case .about: AboutSettings()
         case .releaseNotes: ReleaseNotesSettings()
         case .support: SupportSettings()
+        case .menuBarTimer: MenuBarTimerSettings()
+        case .downloads: DownloadsSettings()
+        case .dockNowPlaying: DockNowPlayingSettings()
+        case .reminders: RemindersSettings()
+        case .storageAnalyzer: StorageAnalyzerSettings()
         }
     }
 }

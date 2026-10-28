@@ -59,6 +59,11 @@ enum ReleaseChangeAliases {
 
     static func aliases(for feature: AppFeature) -> [Alias] {
         switch feature {
+        case .menuBarTimer: return ["menu bar timer", "timer"]
+        case .downloads: return ["downloads", "download manager", "aria2"]
+        case .dockNowPlaying: return ["dock now playing", "music card"]
+        case .reminders: return ["reminders"]
+        case .storageAnalyzer: return ["storage analyzer", "disk usage"]
         case .switcher: return ["window switcher", "app switcher", "switcher"]
         case .dockPreview: return ["dock preview", "dock previews"]
         case .dockClick: return ["dock clicks", "dock click", "click the dock icon", "dock icon", "dock actions"]

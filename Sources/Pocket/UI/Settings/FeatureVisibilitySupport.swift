@@ -10,6 +10,8 @@ enum SettingsPage: Hashable {
     case general, features, energy, monitor
     case mouse, switcher, dock, keyDebounce, superKey, cutPaste, autoQuit, quitProtection, cleaner, uninstaller, urlCleaner, homebrew, appUpdates, media, clipboard, windowLayout, shelf, quickTools, textSnippets, screenshot, radialMenu, commandBar, killProcess, portManager, notch, notchMascot
     case shortcuts, advanced, about, releaseNotes, support
+    // Pocket modules
+    case menuBarTimer, downloads, dockNowPlaying, reminders, storageAnalyzer
 }
 
 /// Stable, non-localized identities for destinations inside shared Settings
@@ -281,6 +283,11 @@ extension AppFeature {
     /// Settings destination before the project compiles.
     var settingsDestination: FeatureSettingsDestination {
         switch self {
+        case .menuBarTimer: return FeatureSettingsDestination(.menuBarTimer)
+        case .downloads: return FeatureSettingsDestination(.downloads)
+        case .dockNowPlaying: return FeatureSettingsDestination(.dockNowPlaying)
+        case .reminders: return FeatureSettingsDestination(.reminders)
+        case .storageAnalyzer: return FeatureSettingsDestination(.storageAnalyzer)
         case .switcher: return FeatureSettingsDestination(.switcher, sectionAnchor: .switcher)
         case .dockPreview: return FeatureSettingsDestination(.dock, sectionAnchor: .dock)
         case .dockClick: return FeatureSettingsDestination(.dock, sectionAnchor: .dockClick)
@@ -397,6 +404,11 @@ enum FeatureVisibilitySupport {
     /// always shows (General, Shortcuts, About and friends).
     static func features(for page: SettingsPage) -> [AppFeature] {
         switch page {
+        case .menuBarTimer: return [.menuBarTimer]
+        case .downloads: return [.downloads]
+        case .dockNowPlaying: return [.dockNowPlaying]
+        case .reminders: return [.reminders]
+        case .storageAnalyzer: return [.storageAnalyzer]
         case .energy: return [.keepAwake, .brightness, .extraBrightness, .bluetoothSleep]
         case .monitor: return monitorFeatures
         case .mouse: return [.scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts,

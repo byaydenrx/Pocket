@@ -1137,6 +1137,8 @@ extension AppFeature {
     func hubTitle(_ s: Strings, hub: FeatureHubStrings,
                   language: AppLanguage = L10n.shared.language) -> String {
         switch self {
+        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer:
+            return pocketTitle
         case .switcher: return s.switcherSection
         case .dockPreview: return s.dockPreviewName
         case .dockClick: return hub.titleDockClick
@@ -1221,6 +1223,8 @@ extension AppFeature {
 
     func hubDescription(_ hub: FeatureHubStrings) -> String {
         switch self {
+        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer:
+            return pocketDescription
         case .switcher: return hub.descSwitcher
         case .dockPreview: return hub.descDockPreview
         case .dockClick: return hub.descDockClick

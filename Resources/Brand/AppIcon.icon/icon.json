@@ -28,7 +28,7 @@
           "image-name" : "pocket-brandmark.svg",
           "name" : "BrandMark-D7-SVG",
           "position" : {
-            "scale" : 1.25,
+            "scale" : 0.8,
             "translation-in-points" : [
               2.2516667286254233e-05,
               3.9609225268577575e-06

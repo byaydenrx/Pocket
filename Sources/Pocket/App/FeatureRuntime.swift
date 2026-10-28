@@ -289,6 +289,11 @@ final class FeatureRuntime: ObservableObject {
             NotchFileToolsService.shared.syncWithPreferences()
         },
         .urlCleaner: { URLCleanerService.shared.syncWithPreferences() },
+        .menuBarTimer: { MainActor.assumeIsolated { MenuBarTimerService.shared.syncWithPreferences() } },
+        .downloads: { MainActor.assumeIsolated { DownloadsService.shared.syncWithPreferences() } },
+        .dockNowPlaying: { MainActor.assumeIsolated { DockNowPlayingService.shared.syncWithPreferences() } },
+        .reminders: { MainActor.assumeIsolated { RemindersService.shared.syncWithPreferences() } },
+        .storageAnalyzer: { MainActor.assumeIsolated { StorageAnalyzerService.shared.syncWithPreferences() } },
         .diskImageInstaller: { DiskImageInstallerService.shared.syncWithPreferences() },
         .mixer: {
             PreciseVolumeRollerService.shared.syncWithPreferences()

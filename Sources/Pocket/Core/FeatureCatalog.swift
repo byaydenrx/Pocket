@@ -35,6 +35,8 @@ enum AppFeature: String, CaseIterable {
     // System monitor, one entry per metric family (temperatures live with
     // their parent metric: CPU temp with CPU, battery temp with power).
     case monitorCPU, monitorGPU, monitorMemory, monitorNetwork, monitorDisk, monitorPower, connectedDevices, fanControl
+    // Pocket additions (see Sources/Pocket/Modules and docs/ADDING_FEATURES.md)
+    case menuBarTimer, downloads, dockNowPlaying, reminders, storageAnalyzer
 }
 
 /// Hub sections, in display order.
@@ -101,6 +103,8 @@ extension AppFeature {
 
     var group: FeatureGroup {
         switch self {
+        case .menuBarTimer, .downloads, .reminders, .storageAnalyzer: return .tools
+        case .dockNowPlaying: return .sound
         case .switcher, .dockPreview, .dockClick, .windowMaximizer, .windowLayout, .autoQuit, .spacesOrder:
             return .windowsDock
         case .scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts, .middleClick,
@@ -208,6 +212,11 @@ extension AppFeature {
         case .monitorDisk: return "internaldrive"
         case .monitorPower: return "bolt.fill"
         case .connectedDevices: return "cable.connector"
+        case .menuBarTimer: return "hourglass"
+        case .downloads: return "arrow.down.circle"
+        case .dockNowPlaying: return "music.note.house"
+        case .reminders: return "checklist"
+        case .storageAnalyzer: return "chart.pie"
         case .fanControl: return "fanblades.fill"
         }
     }
@@ -232,6 +241,11 @@ extension AppFeature {
     /// the permissions portal.
     var enabledKeys: [String] {
         switch self {
+        case .menuBarTimer: return [DefaultsKey.menuBarTimerEnabled]
+        case .dockNowPlaying: return [DefaultsKey.dockNowPlayingEnabled]
+        case .reminders: return [DefaultsKey.remindersEnabled]
+        // Opened on demand from the panel, Command Bar or a shortcut.
+        case .downloads, .storageAnalyzer: return []
         case .switcher: return [DefaultsKey.switcherEnabled]
         case .dockPreview: return [DefaultsKey.dockPreviewEnabled]
         case .dockClick: return [DefaultsKey.dockClickMinimize,
@@ -329,6 +343,10 @@ extension AppFeature {
     /// monitor only notifies when an alert is on, and so on).
     var permissions: [AppPermission] {
         switch self {
+        case .menuBarTimer, .downloads: return []
+        case .dockNowPlaying: return [.accessibility, .automationPlayback]
+        case .reminders: return [.calendar]
+        case .storageAnalyzer: return [.fullDiskAccess]
         case .notchGestures: return []
         case .notchTimer, .notchAccessories: return []
         case .notchLyrics, .notchQueue: return []
@@ -468,6 +486,8 @@ extension AppFeature {
     /// that copies its parent's availability instead.
     var installedByDefault: Bool {
         switch self {
+        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer:
+            return false
         case .switcher, .dockPreview, .dockClick, .windowMaximizer, .windowLayout, .autoQuit,
              .scrollInverter, .smoothScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts,
              .middleClick, .mouseClickDebounce, .keyboardDebounce, .textSnippets, .superKey,

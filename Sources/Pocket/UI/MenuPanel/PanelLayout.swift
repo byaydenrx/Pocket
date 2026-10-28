@@ -12,12 +12,21 @@ protocol PanelOrderItem: RawRepresentable, CaseIterable, Hashable where RawValue
 enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     case keepAwake, brightness, mixer, system, network, disk, power, fanControl, utilities, controls,
          toggles, wallpaper
+    // Pocket additions
+    case reminders
 
     var id: String { rawValue }
 
-    /// Localized display name, reused from the existing section titles.
+    /// The name shown in the panel: the user's own title when they renamed
+    /// the section, otherwise the built-in one.
     func title(_ s: Strings) -> String {
+        PanelLayout.customTitle(for: self) ?? defaultTitle(s)
+    }
+
+    /// Localized display name, reused from the existing section titles.
+    func defaultTitle(_ s: Strings) -> String {
         switch self {
+        case .reminders: return "Reminders"
         case .keepAwake: return s.keepAwakeTitle
         case .brightness: return FeatureStrings.brightness(L10n.shared.language).pageTitle
         case .mixer: return s.mixerSection
@@ -35,6 +44,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
 
     var symbolName: String {
         switch self {
+        case .reminders: return "checklist"
         case .keepAwake: return "moon.zzz.fill"
         case .brightness: return "display.2"
         case .mixer: return "speaker.wave.2"
@@ -55,6 +65,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     /// get a dedicated `panelShow*` key so every section is hideable.
     var visibilityKey: String {
         switch self {
+        case .reminders: return DefaultsKey.remindersEnabled
         case .keepAwake: return DefaultsKey.panelShowKeepAwake
         case .brightness: return DefaultsKey.panelShowBrightness
         case .mixer: return DefaultsKey.monitorShowMixer
@@ -79,6 +90,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     /// feature's return).
     var featureGate: [AppFeature] {
         switch self {
+        case .reminders: return [.reminders]
         case .keepAwake: return [.keepAwake]
         case .brightness: return [.brightness]
         case .mixer: return [.mixer, .audioPriority]
@@ -111,6 +123,24 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
 /// comma-joined set of ids.
 enum PanelLayout {
     private static var defaults: UserDefaults { .standard }
+
+    // MARK: Custom section titles (Pocket)
+
+    private static func titleKey(_ id: PanelSectionID) -> String { "panelSectionTitle.\(id.rawValue)" }
+
+    /// The user's own name for a section, or nil to use the built-in one.
+    static func customTitle(for id: PanelSectionID) -> String? {
+        let title = defaults.string(forKey: titleKey(id))?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return title?.isEmpty == false ? title : nil
+    }
+
+    static func setCustomTitle(_ title: String?, for id: PanelSectionID) {
+        let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty { defaults.removeObject(forKey: titleKey(id)) } else { defaults.set(trimmed, forKey: titleKey(id)) }
+        NotificationCenter.default.post(name: customTitlesChanged, object: nil)
+    }
+
+    static let customTitlesChanged = Notification.Name("PocketPanelSectionTitlesChanged")
 
     /// The sections in display order: the user's saved order first, then any not
     /// yet listed, in their canonical order.
@@ -213,7 +243,7 @@ struct PanelSection<Content: View>: View {
     init(_ id: PanelSectionID, title: String, collapsible: Bool = true,
          @ViewBuilder content: @escaping () -> Content) {
         self.id = id
-        self.title = title
+        self.title = PanelLayout.customTitle(for: id) ?? title
         self.collapsible = collapsible
         self.supportsEditing = false
         self.editButtonVisible = false
@@ -228,7 +258,7 @@ struct PanelSection<Content: View>: View {
          resetAction: (() -> Void)? = nil,
          @ViewBuilder content: @escaping (Bool) -> Content) {
         self.id = id
-        self.title = title
+        self.title = PanelLayout.customTitle(for: id) ?? title
         self.collapsible = collapsible
         self.supportsEditing = supportsEditing
         self.editButtonVisible = editButtonVisible
