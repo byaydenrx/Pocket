@@ -12,6 +12,7 @@ enum SettingsPage: Hashable {
     case shortcuts, advanced, about, releaseNotes, support
     // Pocket modules
     case menuBarTimer, downloads, dockNowPlaying, reminders, storageAnalyzer
+    case taskManager, menuBarManager, windowPin, menuBarCalendar, networkTools, screenRuler, cleanOptimize, display
 }
 
 /// Stable, non-localized identities for destinations inside shared Settings
@@ -288,6 +289,15 @@ extension AppFeature {
         case .dockNowPlaying: return FeatureSettingsDestination(.dockNowPlaying)
         case .reminders: return FeatureSettingsDestination(.reminders)
         case .storageAnalyzer: return FeatureSettingsDestination(.storageAnalyzer)
+        case .taskManager: return FeatureSettingsDestination(.taskManager)
+        case .menuBarManager: return FeatureSettingsDestination(.menuBarManager)
+        case .windowPin: return FeatureSettingsDestination(.windowPin)
+        case .menuBarCalendar: return FeatureSettingsDestination(.menuBarCalendar)
+        case .networkTools: return FeatureSettingsDestination(.networkTools)
+        case .screenRuler: return FeatureSettingsDestination(.screenRuler)
+        case .cleanOptimize: return FeatureSettingsDestination(.cleanOptimize)
+        case .display: return FeatureSettingsDestination(.display)
+
         case .switcher: return FeatureSettingsDestination(.switcher, sectionAnchor: .switcher)
         case .dockPreview: return FeatureSettingsDestination(.dock, sectionAnchor: .dock)
         case .dockClick: return FeatureSettingsDestination(.dock, sectionAnchor: .dockClick)
@@ -409,6 +419,15 @@ enum FeatureVisibilitySupport {
         case .dockNowPlaying: return [.dockNowPlaying]
         case .reminders: return [.reminders]
         case .storageAnalyzer: return [.storageAnalyzer]
+        case .taskManager: return [.taskManager]
+        case .menuBarManager: return [.menuBarManager]
+        case .windowPin: return [.windowPin]
+        case .menuBarCalendar: return [.menuBarCalendar]
+        case .networkTools: return [.networkTools]
+        case .screenRuler: return [.screenRuler]
+        case .cleanOptimize: return [.cleanOptimize]
+        case .display: return [.display]
+
         case .energy: return [.keepAwake, .brightness, .extraBrightness, .bluetoothSleep]
         case .monitor: return monitorFeatures
         case .mouse: return [.scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts,

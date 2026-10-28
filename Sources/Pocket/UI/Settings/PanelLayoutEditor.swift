@@ -152,6 +152,11 @@ private extension PanelSectionID {
         switch self {
         case .reminders: return "Your Reminders lists: check off, add and see what is due."
         case .downloads: return "Paste links, magnets or torrents and watch them download."
+        case .taskManager: return "Your busiest apps, with one-click quit."
+        case .networkTools: return "IPs, Wi-Fi, ping and speed test."
+        case .cleanOptimize: return "Clean caches and run upkeep tasks."
+        case .display: return "Resolution, refresh rate and brightness for each screen."
+
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
             return "A Settings page you pinned to the panel."
         case .keepAwake: return text.sectionKeepAwake

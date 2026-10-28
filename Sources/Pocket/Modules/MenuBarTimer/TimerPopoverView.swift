@@ -97,6 +97,19 @@ struct TimerPopoverView: View {
     private var chips: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 5) {
+                Image(systemName: "leaf.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                if model.pomodoroActive {
+                    TimerChip(title: model.pomodoroOnBreak ? "Skip Break" : "Skip to Break", fill: true) { model.dismiss() }
+                    TimerChip(title: "End Pomodoro", shrinks: true) { model.endPomodoro() }
+                    Text("\(model.pomodoroCompleted) done").font(.system(size: 11)).foregroundStyle(.secondary)
+                } else {
+                    TimerChip(title: "Pomodoro", fill: true) { model.startPomodoro() }
+                        .help("Focus and break cycles. Lengths are in Timer settings.")
+                }
+            }
+            HStack(spacing: 5) {
                 ForEach(TimerModel.presets, id: \.self) { seconds in
                     TimerChip(title: TimerFormat.length(seconds), fill: true) { model.start(seconds) }
                 }

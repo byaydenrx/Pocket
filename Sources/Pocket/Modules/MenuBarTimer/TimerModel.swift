@@ -221,7 +221,11 @@ final class TimerModel: ObservableObject {
         start(request.seconds, label: request.label)
     }
 
+    private var isTransitioning = false
+
     func start(_ seconds: Double, label: String = "") {
+        isTransitioning = true
+        defer { isTransitioning = false }
         stopRinging()
         total = seconds
         self.label = label
@@ -276,14 +280,82 @@ final class TimerModel: ObservableObject {
     }
 
     func stop() {
+        if case .ringing = phase {} else if pomodoroActive, !isTransitioning { pomodoroActive = false; pomodoroOnBreak = false }
         stopRinging()
         phase = .idle
         unschedule()
         save()
     }
 
-    /// Silences the alarm; the timer is done.
-    func dismiss() { stop() }
+    /// Silences the alarm; the timer is done. In a Pomodoro run the next
+    /// phase (break or focus) starts right away.
+    func dismiss() {
+        let wasPomodoro = pomodoroActive
+        stop()
+        if wasPomodoro { pomodoroNext() }
+    }
+
+    // MARK: Pomodoro
+
+    enum PomodoroKey {
+        static let focus = "pomodoroFocusMinutes"
+        static let shortBreak = "pomodoroBreakMinutes"
+        static let longBreak = "pomodoroLongBreakMinutes"
+        static let rounds = "pomodoroRounds"
+        static let keepAwake = "pomodoroKeepAwake"
+    }
+
+    @Published private(set) var pomodoroActive = false
+    @Published private(set) var pomodoroOnBreak = false
+    /// Focus sessions finished in this run.
+    @Published private(set) var pomodoroCompleted = 0
+
+    private func minutes(_ key: String, _ fallback: Double) -> Double {
+        let value = TimerStore.defaults.double(forKey: key)
+        return (value > 0 ? value : fallback) * 60
+    }
+
+    func startPomodoro() {
+        pomodoroActive = true
+        pomodoroOnBreak = false
+        pomodoroCompleted = 0
+        startFocus()
+    }
+
+    func endPomodoro() {
+        pomodoroActive = false
+        pomodoroOnBreak = false
+        stop()
+        setKeepAwake(false)
+    }
+
+    private func startFocus() {
+        pomodoroOnBreak = false
+        start(minutes(PomodoroKey.focus, 25), label: "Focus \(pomodoroCompleted + 1)")
+        pomodoroActive = true
+        setKeepAwake(true)
+    }
+
+    private func pomodoroNext() {
+        if pomodoroOnBreak {
+            startFocus()
+            return
+        }
+        pomodoroCompleted += 1
+        let rounds = Int(TimerStore.defaults.double(forKey: PomodoroKey.rounds).rounded())
+        let long = pomodoroCompleted % max(rounds > 0 ? rounds : 4, 1) == 0
+        pomodoroOnBreak = true
+        setKeepAwake(false)
+        start(long ? minutes(PomodoroKey.longBreak, 15) : minutes(PomodoroKey.shortBreak, 5),
+              label: long ? "Long Break" : "Break")
+        pomodoroActive = true
+    }
+
+    private func setKeepAwake(_ on: Bool) {
+        guard TimerStore.defaults.bool(forKey: PomodoroKey.keepAwake), AppFeature.keepAwake.isAvailable else { return }
+        let manager = KeepAwakeManager.shared
+        if on != manager.isActive { manager.toggle() }
+    }
 
     // MARK: Ticking
 

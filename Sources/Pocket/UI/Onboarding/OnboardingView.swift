@@ -35,19 +35,20 @@ struct OnboardingView: View {
         let defaults = UserDefaults.standard
         let selectionWasApplied = defaults.bool(forKey: DefaultsKey.hasOnboarded)
             || defaults.integer(forKey: DefaultsKey.onboardingStep) >= 2
-        let features = selectionWasApplied
-            ? Set(AppFeature.allCases.filter(\.isAvailable))
-            : FeaturePreset.essential.features
+        // Pocket has no install step: every feature is present and idle
+        // until switched on, so the setup only covers permissions.
+        _ = selectionWasApplied
+        let features = Set(AppFeature.allCases)
         _selectedFeatures = State(initialValue: features)
-        _selectedPreset = State(initialValue: selectionWasApplied ? nil : .essential)
+        _selectedPreset = State(initialValue: nil)
     }
 
     private var setupPermissions: [AppPermission] {
         let permissions = Set(selectedFeatures.flatMap(\.onboardingPermissions))
-        return [.accessibility, .screenRecording].filter { permissions.contains($0) }
+        return [.accessibility].filter { permissions.contains($0) }
     }
     private var steps: [OnboardingStep] {
-        [.welcome, .purpose, .permissions, .done]
+        [.welcome, .permissions, .done]
     }
     private var current: OnboardingStep { steps[min(max(0, index), steps.count - 1)] }
 

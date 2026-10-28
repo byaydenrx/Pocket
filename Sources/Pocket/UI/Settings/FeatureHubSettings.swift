@@ -1137,7 +1137,8 @@ extension AppFeature {
     func hubTitle(_ s: Strings, hub: FeatureHubStrings,
                   language: AppLanguage = L10n.shared.language) -> String {
         switch self {
-        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer:
+        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer,
+             .taskManager, .menuBarManager, .windowPin, .menuBarCalendar, .networkTools, .screenRuler, .cleanOptimize, .display:
             return pocketTitle
         case .switcher: return s.switcherSection
         case .dockPreview: return s.dockPreviewName
@@ -1223,7 +1224,8 @@ extension AppFeature {
 
     func hubDescription(_ hub: FeatureHubStrings) -> String {
         switch self {
-        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer:
+        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer,
+             .taskManager, .menuBarManager, .windowPin, .menuBarCalendar, .networkTools, .screenRuler, .cleanOptimize, .display:
             return pocketDescription
         case .switcher: return hub.descSwitcher
         case .dockPreview: return hub.descDockPreview

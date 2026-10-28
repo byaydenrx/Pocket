@@ -37,6 +37,7 @@ enum AppFeature: String, CaseIterable {
     case monitorCPU, monitorGPU, monitorMemory, monitorNetwork, monitorDisk, monitorPower, connectedDevices, fanControl
     // Pocket additions (see Sources/Pocket/Modules and docs/ADDING_FEATURES.md)
     case menuBarTimer, downloads, dockNowPlaying, reminders, storageAnalyzer
+    case taskManager, menuBarManager, windowPin, menuBarCalendar, networkTools, screenRuler, cleanOptimize, display
 }
 
 
@@ -49,7 +50,7 @@ extension AppFeature {
     ]
 
     static var allCases: [AppFeature] {
-        [.switcher, .dockPreview, .dockClick, .windowMaximizer, .autoQuit, .spacesOrder, .scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseNavigation, .mouseButtonShortcuts, .middleClick, .mouseClickDebounce, .keyboardDebounce, .textSnippets, .superKey, .quitWindowProtection, .clipboardHistory, .pastePlain, .finderCutPaste, .finderRename, .shelf, .urlCleaner, .diskImageInstaller, .mixer, .soundOutputSwitcher, .audioPriority, .micMute, .musicBlock, .keepAwake, .brightness, .extraBrightness, .bluetoothSleep, .quickLauncher, .quickToggles, .colorPicker, .screenOCR, .cleaningMode, .mediaTools, .cleaner, .uninstaller, .homebrew, .appUpdates, .screenshot, .cameraPreview, .radialMenu, .scratchpad, .commandBar, .screenRecorder, .wallpaper, .killProcess, .portManager, .monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower, .connectedDevices, .fanControl, .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer]
+        [.switcher, .dockPreview, .dockClick, .windowMaximizer, .autoQuit, .spacesOrder, .scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseNavigation, .mouseButtonShortcuts, .middleClick, .mouseClickDebounce, .keyboardDebounce, .textSnippets, .superKey, .quitWindowProtection, .clipboardHistory, .pastePlain, .finderCutPaste, .finderRename, .shelf, .urlCleaner, .diskImageInstaller, .mixer, .soundOutputSwitcher, .audioPriority, .micMute, .musicBlock, .keepAwake, .brightness, .extraBrightness, .bluetoothSleep, .quickLauncher, .quickToggles, .colorPicker, .screenOCR, .cleaningMode, .mediaTools, .cleaner, .uninstaller, .homebrew, .appUpdates, .screenshot, .cameraPreview, .radialMenu, .scratchpad, .commandBar, .screenRecorder, .wallpaper, .killProcess, .portManager, .monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower, .connectedDevices, .fanControl, .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer, .taskManager, .menuBarManager, .windowPin, .menuBarCalendar, .networkTools, .screenRuler, .cleanOptimize, .display]
     }
 }
 
@@ -119,6 +120,10 @@ extension AppFeature {
         switch self {
         case .menuBarTimer, .downloads, .reminders, .storageAnalyzer: return .tools
         case .dockNowPlaying: return .sound
+        case .taskManager, .menuBarManager, .menuBarCalendar, .networkTools, .screenRuler, .cleanOptimize: return .tools
+        case .windowPin: return .windowsDock
+        case .display: return .energyDisplay
+
         case .switcher, .dockPreview, .dockClick, .windowMaximizer, .windowLayout, .autoQuit, .spacesOrder:
             return .windowsDock
         case .scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts, .middleClick,
@@ -231,6 +236,15 @@ extension AppFeature {
         case .dockNowPlaying: return "music.note.house"
         case .reminders: return "checklist"
         case .storageAnalyzer: return "chart.pie"
+        case .taskManager: return "gauge.with.dots.needle.67percent"
+        case .menuBarManager: return "menubar.dock.rectangle"
+        case .windowPin: return "pin"
+        case .menuBarCalendar: return "calendar"
+        case .networkTools: return "network.badge.shield.half.filled"
+        case .screenRuler: return "ruler"
+        case .cleanOptimize: return "sparkles.rectangle.stack"
+        case .display: return "display.2"
+
         case .fanControl: return "fanblades.fill"
         }
     }
@@ -260,6 +274,11 @@ extension AppFeature {
         case .reminders: return [DefaultsKey.remindersEnabled]
         // Opened on demand from the panel, Command Bar or a shortcut.
         case .downloads, .storageAnalyzer: return []
+        case .menuBarManager: return ["menuBarManagerEnabled"]
+        case .windowPin: return ["windowPinEnabled"]
+        case .menuBarCalendar: return ["menuBarCalendarEnabled"]
+        case .taskManager, .networkTools, .screenRuler, .cleanOptimize, .display: return []
+
         case .switcher: return [DefaultsKey.switcherEnabled]
         case .dockPreview: return [DefaultsKey.dockPreviewEnabled]
         case .dockClick: return [DefaultsKey.dockClickCycleWindows]
@@ -359,6 +378,15 @@ extension AppFeature {
         case .dockNowPlaying: return [.accessibility, .automationPlayback]
         case .reminders: return [.calendar]
         case .storageAnalyzer: return [.fullDiskAccess]
+        case .taskManager: return []
+        case .menuBarManager: return []
+        case .windowPin: return [.accessibility, .screenRecording]
+        case .menuBarCalendar: return [.calendar]
+        case .networkTools: return []
+        case .screenRuler: return []
+        case .cleanOptimize: return [.fullDiskAccess]
+        case .display: return []
+
         case .notchGestures: return []
         case .notchTimer, .notchAccessories: return []
         case .notchLyrics, .notchQueue: return []
@@ -498,8 +526,9 @@ extension AppFeature {
     /// that copies its parent's availability instead.
     var installedByDefault: Bool {
         switch self {
-        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer:
-            return false
+        case .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer,
+             .taskManager, .menuBarManager, .windowPin, .menuBarCalendar, .networkTools, .screenRuler, .cleanOptimize, .display:
+            return true
         case .switcher, .dockPreview, .dockClick, .windowMaximizer, .windowLayout, .autoQuit,
              .scrollInverter, .smoothScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts,
              .middleClick, .mouseClickDebounce, .keyboardDebounce, .textSnippets, .superKey,

@@ -93,6 +93,7 @@ extension AppFeature {
         // The timer ticks once a second only while one runs; downloads poll
         // aria2 only while their window is open or a download is active.
         case .menuBarTimer, .downloads, .reminders, .storageAnalyzer: return .idle
+        case .taskManager, .menuBarManager, .windowPin, .menuBarCalendar, .networkTools, .screenRuler, .cleanOptimize, .display: return .idle
         // Watches the pointer near the Dock to show the Music card.
         case .dockNowPlaying: return .periodic
         case .scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .windowMaximizer, .middleClick,

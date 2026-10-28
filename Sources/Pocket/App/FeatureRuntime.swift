@@ -294,6 +294,15 @@ final class FeatureRuntime: ObservableObject {
         .dockNowPlaying: { MainActor.assumeIsolated { DockNowPlayingService.shared.syncWithPreferences() } },
         .reminders: { MainActor.assumeIsolated { RemindersService.shared.syncWithPreferences() } },
         .storageAnalyzer: { MainActor.assumeIsolated { StorageAnalyzerService.shared.syncWithPreferences() } },
+        .taskManager: { MainActor.assumeIsolated { TaskManagerService.shared.syncWithPreferences() } },
+        .menuBarManager: { MainActor.assumeIsolated { MenuBarManagerService.shared.syncWithPreferences() } },
+        .windowPin: { MainActor.assumeIsolated { WindowPinService.shared.syncWithPreferences() } },
+        .menuBarCalendar: { MainActor.assumeIsolated { MenuBarCalendarService.shared.syncWithPreferences() } },
+        .networkTools: { MainActor.assumeIsolated { NetworkToolsService.shared.syncWithPreferences() } },
+        .screenRuler: { MainActor.assumeIsolated { ScreenRulerService.shared.syncWithPreferences() } },
+        .cleanOptimize: { MainActor.assumeIsolated { CleanOptimizeService.shared.syncWithPreferences() } },
+        .display: { MainActor.assumeIsolated { DisplayModeService.shared.syncWithPreferences() } },
+
         .diskImageInstaller: { DiskImageInstallerService.shared.syncWithPreferences() },
         .mixer: {
             PreciseVolumeRollerService.shared.syncWithPreferences()

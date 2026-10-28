@@ -1276,6 +1276,14 @@ struct SettingsPageContent: View {
         case .dockNowPlaying: DockNowPlayingSettings()
         case .reminders: RemindersSettings()
         case .storageAnalyzer: StorageAnalyzerSettings()
+        case .taskManager: TaskManagerSettings()
+        case .menuBarManager: MenuBarManagerSettings()
+        case .windowPin: WindowPinSettings()
+        case .menuBarCalendar: MenuBarCalendarSettings()
+        case .networkTools: NetworkToolsSettings()
+        case .screenRuler: ScreenRulerSettings()
+        case .cleanOptimize: CleanOptimizeSettings()
+        case .display: DisplaySettings()
         }
     }
 }

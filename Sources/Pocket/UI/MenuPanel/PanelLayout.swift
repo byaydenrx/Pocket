@@ -13,7 +13,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     case keepAwake, brightness, mixer, system, network, disk, power, fanControl, utilities, controls,
          toggles, wallpaper
     // Pocket additions
-    case reminders, downloads
+    case reminders, downloads, taskManager, networkTools, cleanOptimize, display
     /// Slots for any Settings page the user pins to the panel as a tab.
     case custom1, custom2, custom3, custom4, custom5, custom6, custom7, custom8
 
@@ -31,6 +31,11 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
             return PanelCustomTabs.page(for: self).flatMap(PanelCustomTabs.entry(for:))?.title ?? "Tab"
         case .reminders: return "Reminders"
+        case .taskManager: return "Task Manager"
+        case .networkTools: return "Network Tools"
+        case .cleanOptimize: return "Clean & Optimize"
+        case .display: return "Display"
+
         case .downloads: return "Downloads"
         case .keepAwake: return s.keepAwakeTitle
         case .brightness: return FeatureStrings.brightness(L10n.shared.language).pageTitle
@@ -52,6 +57,11 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
             return PanelCustomTabs.page(for: self).flatMap(PanelCustomTabs.entry(for:))?.icon ?? "square.dashed"
         case .reminders: return "checklist"
+        case .taskManager: return "gauge.with.dots.needle.67percent"
+        case .networkTools: return "network.badge.shield.half.filled"
+        case .cleanOptimize: return "sparkles.rectangle.stack"
+        case .display: return "display.2"
+
         case .downloads: return "arrow.down.circle"
         case .keepAwake: return "moon.zzz.fill"
         case .brightness: return "display.2"
@@ -76,6 +86,11 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
             return "panelShow.\(rawValue)"
         case .reminders: return DefaultsKey.remindersEnabled
+        case .taskManager: return "panelShow.taskManager"
+        case .networkTools: return "panelShow.networkTools"
+        case .cleanOptimize: return "panelShow.cleanOptimize"
+        case .display: return "panelShow.display"
+
         case .downloads: return "panelShowDownloads"
         case .keepAwake: return DefaultsKey.panelShowKeepAwake
         case .brightness: return DefaultsKey.panelShowBrightness
@@ -103,9 +118,15 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8: return []
         case .reminders: return [.reminders]
+        case .taskManager: return [.taskManager]
+        case .networkTools: return [.networkTools]
+        case .cleanOptimize: return [.cleanOptimize]
+        case .display: return [.display]
+
         case .downloads: return [.downloads]
         case .keepAwake: return [.keepAwake]
-        case .brightness: return [.brightness]
+        // Pocket: the Display tab replaces this one.
+        case .brightness: return []
         case .mixer: return [.mixer, .audioPriority]
         case .system: return [.monitorCPU, .monitorGPU, .monitorMemory, .connectedDevices]
         case .network: return [.monitorNetwork]
