@@ -27,13 +27,13 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>1.0.1</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
@@ -41,34 +41,34 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Pocket uses Automation to move files, send items to the Trash, open requested commands and control playback in your media apps.</string>
+	<string>Pocket uses Automation to move files to the Trash and to read and control what Music is playing.</string>
 	<key>NSAudioCaptureUsageDescription</key>
-	<string>Pocket uses each app's audio to adjust its volume in the mixer, to move Dynamic Island's music bars and to include the Mac's sound in the screen recordings you start. Nothing leaves your Mac.</string>
+	<string>Pocket uses each app's audio only to set its volume in the mixer. Nothing leaves your Mac.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Pocket uses Bluetooth only to read the battery level of connected peripherals. Nothing leaves your Mac.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Pocket records your microphone only when you turn it on for a screen recording. The audio stays on your Mac unless you choose to create a temporary link.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Show your upcoming appointments in the notch. Calendar events stay on this Mac.</string>
-	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>Show your reminders in the menu bar and panel so you can check them off and add new ones. Reminders stay on this Mac.</string>
+	<string>Pocket reads your calendars only when you ask it to. Events stay on this Mac.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Pocket shows your camera only in the preview window you open, so you can check how you look before a call. Nothing is recorded or leaves your Mac.</string>
-	<key>NSDownloadsFolderUsageDescription</key>
-	<string>Pocket checks local metadata in Downloads to review, organize or trash only confirmed WhatsApp files you choose. The Cleaner also looks for forgotten screenshots when you save screenshots here.</string>
-	<key>NSDesktopFolderUsageDescription</key>
-	<string>Pocket organizes confirmed WhatsApp downloads in a destination folder you explicitly choose. The Cleaner also looks for forgotten screenshots when you save screenshots here.</string>
-	<key>NSDocumentsFolderUsageDescription</key>
-	<string>Pocket organizes confirmed WhatsApp downloads in a destination folder you explicitly choose. The Cleaner also looks for forgotten screenshots when you save screenshots here.</string>
-	<key>NSNetworkVolumesUsageDescription</key>
-	<string>Pocket organizes confirmed WhatsApp downloads in a destination folder you explicitly choose. The Cleaner also looks for forgotten screenshots when you save screenshots here.</string>
-	<key>NSRemovableVolumesUsageDescription</key>
-	<string>Pocket organizes confirmed WhatsApp downloads in a destination folder you explicitly choose. The Cleaner also looks for forgotten screenshots when you save screenshots here.</string>
+	<string>Pocket does not use the camera.</string>
 	<key>NSCameraUseContinuityCameraDeviceType</key>
 	<true/>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Pocket looks in this folder only when you scan it, clean it or save files there.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Pocket looks in this folder only when you scan it, clean it or save files there.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Pocket looks in Downloads to save your downloads there and to list forgotten files when you run a cleanup.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Pocket</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Pocket uses the microphone only to mute or unmute it for you. Nothing is recorded.</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>Pocket looks at network drives only when you scan them.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Show your reminders in the menu bar and panel so you can check them off and add new ones. Reminders stay on this Mac.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>Pocket looks at external drives only when you scan or eject them.</string>
 </dict>
 </plist>

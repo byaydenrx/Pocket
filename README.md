@@ -57,9 +57,25 @@ Features that are off cost nothing: they start no timers, taps or listeners. Mon
 
 ## Install
 
-Download `Pocket.dmg` from the [latest release](https://github.com/byaydenrx/Pocket/releases/latest) and drag Pocket to Applications. Pocket is not notarized, so the first time macOS blocks it: open **System Settings › Privacy & Security** and click **Open Anyway**. Updates install from inside the app and are checked against the project's signing key.
+Download `Pocket.dmg` from the [latest release](https://github.com/byaydenrx/Pocket/releases/latest), open it and drag Pocket to Applications. Pocket is not notarized, so the first time macOS blocks it: open **System Settings › Privacy & Security** and click **Open Anyway**. Updates install from inside the app and are checked against the project's signing key.
 
-Requires macOS 14 or later; Liquid Glass needs macOS 26.
+## Requirements
+
+- A Mac with **Apple silicon** (M1 or later). Intel Macs are not supported.
+- **macOS 14 Sonoma or later.** Liquid Glass surfaces need macOS 26; earlier versions get the standard frosted look.
+- Nothing else for the core app: no Homebrew, no drivers, no accounts.
+
+Optional tools, used only by the features that name them (Pocket tells you when one is missing):
+
+| Feature | Needs | Install |
+|---|---|---|
+| Downloads | [aria2](https://aria2.github.io) | `brew install aria2` |
+| Shelf: WebP output | cwebp | `brew install webp` |
+| Shelf: best PNG compression | pngquant | `brew install pngquant` (falls back to built-in compression) |
+| Shelf: MP3 output | lame | `brew install lame` |
+| Optimize: Clean Up Homebrew | Homebrew | [brew.sh](https://brew.sh) (the task hides without it) |
+
+Permissions are asked for only when a feature that needs them is turned on: Accessibility (switcher, Dock clicks, quit on close, Dock Now Playing), Screen Recording (switcher previews), Full Disk Access (Clean & Optimize, Storage Analyzer), Reminders, and Automation for Finder and Music.
 
 ## Build it yourself
 

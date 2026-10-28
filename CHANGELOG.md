@@ -5,6 +5,34 @@ All notable changes to Pocket are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Pocket started from Vorssaint 3.4.2;
 its history is in UPSTREAM-CHANGELOG.md.
 
+## [1.0.1] - 2026-10-28
+
+### Summary
+A leaner, tidier Pocket: fewer, better features, native Liquid Glass everywhere and a cleaner Settings window.
+
+### Added
+- Keep Awake and a timer as dropdowns in Quick Toggles; right-click the menu bar icon to keep awake with no time limit.
+- Storage tab inside Clean & Optimize, Run All for upkeep tasks, and App Updates as its own panel tab.
+- Wi-Fi details and ping in the Network tab and Monitor settings.
+- Every keyboard shortcut can be removed.
+
+### Changed
+- All glass is the system's own Liquid Glass and follows your Liquid Glass setting.
+- The volume mixer looks like FineTune's.
+- Settings are regrouped: Pocket, Menu Bar, Windows & Dock, Mac, Maintenance and About.
+- Downloads lives in the menu panel; aria2 runs only while you use it.
+- The cleaner reports the space it actually freed, apart from what went to the Trash.
+
+### Removed
+- Many upstream tools that overlapped or were rarely used: window layouts, clipboard history, snippets, screenshots and recording, command bar, radial menu, Dynamic Island, mouse remapping, the uninstaller and more.
+
+### Fixed
+- The menu panel no longer stays open after you click away.
+- Only one shelf opens at a time.
+- Shortcuts that apps use (like ⌘C) can no longer be taken over.
+- Rebuilding the Open With menu and Homebrew cleanup work on macOS 27.
+- Dock previews no longer cover the Now Playing card on Music.
+
 ## [1.0.0] - 2026-10-28
 
 ### Summary
