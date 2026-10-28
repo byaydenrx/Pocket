@@ -305,6 +305,7 @@ struct MenuPanelView: View {
         case .toggles: return 420
         case .wallpaper: return 480
         case .reminders: return 320
+        case .appUpdates: return 420
         case .downloads: return 380
         case .taskManager: return 420
         case .networkTools: return 420
@@ -356,6 +357,10 @@ struct MenuPanelView: View {
         case .toggles: QuickTogglesSection(collapsible: collapsible)
         case .wallpaper: if showWallpaper { WallpaperSection(collapsible: collapsible) }
         case .reminders: RemindersSection(collapsible: collapsible)
+        case .appUpdates:
+            PanelSection(.appUpdates, title: PanelSectionID.appUpdates.title(l10n.s), collapsible: collapsible) {
+                AppUpdatesListView(compact: true)
+            }
         case .downloads: DownloadsSection(collapsible: collapsible)
         case .taskManager: TaskManagerSection(collapsible: collapsible)
         case .networkTools: NetworkToolsSection(collapsible: collapsible)

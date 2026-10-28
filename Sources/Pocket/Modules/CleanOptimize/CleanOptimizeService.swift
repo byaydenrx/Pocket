@@ -33,7 +33,9 @@ final class CleanOptimizeService: ObservableObject {
                  symbol: "eye", admin: false, command: "/usr/bin/qlmanage -r >/dev/null; /usr/bin/qlmanage -r cache >/dev/null"),
             Task(id: "launchservices", title: "Rebuild “Open With” Menu", detail: "Removes duplicate and stale apps from Open With.",
                  symbol: "square.stack.3d.up", admin: false,
-                 command: "\(Self.lsregister) -kill -r -domain local -domain system -domain user"),
+                 // macOS 27's lsregister has no -kill: compact the database,
+                 // then re-register the app folders from scratch.
+                 command: "\(Self.lsregister) -gc; \(Self.lsregister) -f -r /Applications /System/Applications \"$HOME/Applications\" 2>/dev/null; true"),
             Task(id: "fonts", title: "Clear Font Caches", detail: "Fixes garbled or missing fonts.",
                  symbol: "textformat", admin: false,
                  command: "/usr/bin/atsutil databases -removeUser >/dev/null; /usr/bin/atsutil server -shutdown >/dev/null; /usr/bin/atsutil server -ping >/dev/null"),
@@ -45,13 +47,46 @@ final class CleanOptimizeService: ObservableObject {
                  symbol: "dock.rectangle", admin: false, command: "/usr/bin/killall Dock SystemUIServer"),
         ]
         if let brew = ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"].first(where: FileManager.default.isExecutableFile(atPath:)) {
+            // brew refuses to run without HOME and needs its own bin on PATH.
+            let env = "HOME=\"\(NSHomeDirectory())\" PATH=\"\((brew as NSString).deletingLastPathComponent):/usr/bin:/bin:/usr/sbin:/sbin\""
             list.append(Task(id: "brew", title: "Clean Up Homebrew", detail: "Removes old versions and Homebrew's download cache.",
-                             symbol: "shippingbox", admin: false, command: "\(brew) cleanup --prune=all -s >/dev/null 2>&1"))
+                             symbol: "shippingbox", admin: false, command: "\(env) \(brew) cleanup --prune=all -s >/dev/null 2>&1"))
         }
         return list
     }
 
     func syncWithPreferences() {}
+
+    @Published private(set) var runningAll = false
+
+    /// Runs every task: the ones that need administrator rights together,
+    /// behind one password prompt, then the rest one after another.
+    func runAll() {
+        guard !runningAll else { return }
+        runningAll = true
+        let all = tasks
+        for task in all { states[task.id] = .running }
+        let admin = all.filter(\.admin)
+        let user = all.filter { !$0.admin }
+        DispatchQueue.global(qos: .userInitiated).async {
+            var results: [String: Bool] = [:]
+            if !admin.isEmpty {
+                let ok = AdminShell.runSync(admin.map(\.command).joined(separator: "; "),
+                                            prompt: "Pocket wants to run its maintenance tasks.")
+                for task in admin { results[task.id] = ok }
+            }
+            for task in user {
+                results[task.id] = Shell.run("/bin/sh", ["-c", task.command], timeout: 300).status == 0
+            }
+            DispatchQueue.main.async {
+                for (id, ok) in results { self.states[id] = ok ? .done : .failed }
+                self.runningAll = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
+                    for id in results.keys where self.states[id] != .running { self.states[id] = nil }
+                }
+            }
+        }
+    }
 
     func run(_ task: Task) {
         guard states[task.id] != .running else { return }
@@ -81,6 +116,15 @@ struct OptimizeList: View {
 
     var body: some View {
         VStack(spacing: 2) {
+            HStack {
+                Text("Tasks with a lock ask for your password once.")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button(service.runningAll ? "Running…" : "Run All") { service.runAll() }
+                    .disabled(service.runningAll)
+                    .controlSize(.small)
+            }
+            .padding(.bottom, 4)
             ForEach(service.tasks) { task in
                 HStack(spacing: 10) {
                     Image(systemName: task.symbol)

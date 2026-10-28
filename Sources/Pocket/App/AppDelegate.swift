@@ -1428,6 +1428,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     func popoverDidClose(_ notification: Notification) {
         // A recovered close can still report back after the next presentation.
         guard popoverIsClosing, !popover.isShown else { return }
+        NotificationCenter.default.post(name: .pocketMenuPanelDidClose, object: nil)
         finishPopoverClose()
     }
 

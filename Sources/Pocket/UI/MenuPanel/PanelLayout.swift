@@ -13,7 +13,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     case keepAwake, brightness, mixer, system, network, disk, power, fanControl, utilities, controls,
          toggles, wallpaper
     // Pocket additions
-    case reminders, downloads, taskManager, networkTools, cleanOptimize, display
+    case appUpdates, reminders, downloads, taskManager, networkTools, cleanOptimize, display
     /// Slots for any Settings page the user pins to the panel as a tab.
     case custom1, custom2, custom3, custom4, custom5, custom6, custom7, custom8
 
@@ -30,6 +30,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
             return PanelCustomTabs.page(for: self).flatMap(PanelCustomTabs.entry(for:))?.title ?? "Tab"
+        case .appUpdates: return "App Updates"
         case .reminders: return "Reminders"
         case .taskManager: return "Task Manager"
         case .networkTools: return "Network Tools"
@@ -56,6 +57,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
             return PanelCustomTabs.page(for: self).flatMap(PanelCustomTabs.entry(for:))?.icon ?? "square.dashed"
+        case .appUpdates: return "arrow.down.app"
         case .reminders: return "checklist"
         case .taskManager: return "gauge.with.dots.needle.67percent"
         case .networkTools: return "network.badge.shield.half.filled"
@@ -85,6 +87,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8:
             return "panelShow.\(rawValue)"
+        case .appUpdates: return "panelShow.appUpdates"
         case .reminders: return DefaultsKey.remindersEnabled
         case .taskManager: return "panelShow.taskManager"
         case .networkTools: return "panelShow.networkTools"
@@ -117,6 +120,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     var featureGate: [AppFeature] {
         switch self {
         case .custom1, .custom2, .custom3, .custom4, .custom5, .custom6, .custom7, .custom8: return []
+        case .appUpdates: return [.appUpdates]
         case .reminders: return [.reminders]
         case .taskManager: return [.taskManager]
         case .networkTools: return [.networkTools]
@@ -133,11 +137,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .disk: return [.monitorDisk]
         case .power: return [.monitorPower]
         case .fanControl: return [.fanControl]
-        case .utilities: return [.quickLauncher, .cleaner, .homebrew, .appUpdates, .mediaTools,
-                                 .clipboardHistory,
-                                 .windowLayout, .uninstaller, .urlCleaner, .cleaningMode, .screenOCR,
-                                 .colorPicker, .screenshot, .screenRecorder,
-                                 .cameraPreview, .scratchpad, .commandBar, .portManager]
+        case .utilities: return [] // Pocket: its tools have their own tabs now
         case .controls: return [.scrollInverter, .linearScroll, .focusFollowsMouse, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts, .switcher,
                                 .finderCutPaste, .autoQuit,
                                 .shelf, .windowMaximizer, .dockPreview, .keyboardDebounce, .dockClick, .spacesOrder,
@@ -306,11 +306,14 @@ struct PanelSection<Content: View>: View {
         _collapsed = State(initialValue: PanelLayout.isCollapsed(id))
     }
 
+    /// An empty title means no header at all (the tab icon already names it).
+    private var showsHeader: Bool { !(title.isEmpty && !supportsEditing) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            header
+            if showsHeader { header }
 
-            if !collapsible || !collapsed {
+            if !showsHeader || !collapsible || !collapsed {
                 content(isEditing)
             }
         }

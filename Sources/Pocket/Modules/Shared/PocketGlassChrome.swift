@@ -2,29 +2,50 @@
 // Copyright (C) 2026 Byaydenrx
 
 import AppKit
+import SwiftUI
 
-/// One glass for every Pocket surface. Panels and cards draw `HUDBackdrop`
-/// (the Dock card's look). Popovers would add the system's own frosted
-/// balloon under it, which is what made the menu panel heavier than the Dock
-/// card and the switcher; this takes that layer away so only Pocket's glass
-/// shows. The popover still clips the content to its balloon and draws its
-/// outline and shadow.
-enum PocketGlassChrome {
-    static func clearSystemMaterial(of popover: NSPopover) {
-        guard LiquidGlassSupport.isSupported,
-              UserDefaults.standard.bool(forKey: DefaultsKey.liquidGlassEnabled),
-              let content = popover.contentViewController?.view,
-              let frame = content.window?.contentView?.superview ?? content.superview
-        else { return }
-        hideMaterials(in: frame, keeping: content)
-    }
+/// Pocket's one glass: the system's own Liquid Glass view (`NSGlassEffectView`),
+/// with no tint, plate or forced appearance on top. It follows the Mac's
+/// Liquid Glass setting (Clear or Tinted) and light or dark mode by itself,
+/// so every Pocket surface looks like the rest of macOS and like each other.
+/// Before macOS 26 it falls back to the HUD material.
+struct PocketGlass: NSViewRepresentable {
+    var cornerRadius: CGFloat = 0
 
-    private static func hideMaterials(in view: NSView, keeping content: NSView) {
-        for sub in view.subviews where sub !== content {
-            if let effect = sub as? NSVisualEffectView, !effect.isDescendant(of: content) {
-                effect.alphaValue = 0
-            }
-            if !sub.isDescendant(of: content) { hideMaterials(in: sub, keeping: content) }
+    func makeNSView(context: Context) -> NSView {
+#if compiler(>=6.2)
+        if #available(macOS 26.0, *) {
+            let glass = NSGlassEffectView()
+            glass.style = .regular
+            glass.cornerRadius = cornerRadius
+            return glass
         }
+#endif
+        let effect = NSVisualEffectView()
+        effect.material = .hudWindow
+        effect.blendingMode = .behindWindow
+        effect.state = .active
+        effect.wantsLayer = true
+        effect.layer?.cornerRadius = cornerRadius
+        effect.layer?.cornerCurve = .continuous
+        effect.layer?.masksToBounds = true
+        return effect
     }
+
+    func updateNSView(_ view: NSView, context: Context) {
+#if compiler(>=6.2)
+        if #available(macOS 26.0, *), let glass = view as? NSGlassEffectView {
+            glass.cornerRadius = cornerRadius
+            return
+        }
+#endif
+        view.layer?.cornerRadius = cornerRadius
+    }
+}
+
+/// Popovers are already system Liquid Glass on macOS 26; Pocket leaves that
+/// glass alone (an earlier build hid it and painted its own, which made the
+/// menu panel look different from everything else).
+enum PocketGlassChrome {
+    static func clearSystemMaterial(of popover: NSPopover) {}
 }

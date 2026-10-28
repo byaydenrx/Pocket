@@ -70,6 +70,18 @@ final class JunkCleaner: ObservableObject {
     }
 
     @Published private(set) var phase: Phase = .idle
+    /// How much the last clean moved to the Trash: still on the disk until
+    /// the Trash is emptied, so it is reported apart from what was freed.
+    @Published private(set) var lastMovedToTrash: Int64 = 0
+
+    /// Free space on the home volume, read fresh (resource values cache).
+    nonisolated static func freeSpace() -> Int64 {
+        var url = FileManager.default.homeDirectoryForCurrentUser
+        url.removeAllCachedResourceValues()
+        let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeAvailableCapacityKey])
+        let important = values?.volumeAvailableCapacityForImportantUsage ?? 0
+        return important > 0 ? important : Int64(values?.volumeAvailableCapacity ?? 0)
+    }
     @Published var items: [Item] = []
     /// The category currently being scanned, for the progress line.
     @Published private(set) var scanningCategory: CleanerSupport.Category?
@@ -191,6 +203,7 @@ final class JunkCleaner: ObservableObject {
             var freed: Int64 = 0
             var failed = 0
             var stubborn: [Item] = []
+            let freeBefore = Self.freeSpace()
 
             // Emptying the Trash MUST come first: the row means the Trash as
             // it was scanned. Running it after the moves would silently wipe
@@ -243,10 +256,17 @@ final class JunkCleaner: ObservableObject {
                 }
             }
 
+            // Report what the disk actually gained, not the sum of the item
+            // sizes: moved items still use space until the Trash is emptied,
+            // and APFS clones and purgeable data never matched their sizes.
+            let trashedSize = chosen.filter { $0.category != .trash }.reduce(Int64(0)) { $0 + $1.size }
+            let measured = max(0, Self.freeSpace() - freeBefore)
+            let reported = min(freed, measured)
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.phase == .cleaning else { return }
                 self.items = []
-                self.phase = .done(freed: freed, failed: failed)
+                self.lastMovedToTrash = max(0, min(trashedSize, freed - reported))
+                self.phase = .done(freed: reported, failed: failed)
             }
         }
     }

@@ -11,18 +11,22 @@ enum QuickToggleAction: String, PanelOrderItem, Identifiable {
     case darkMode, keyboardLight, micMute, emptyTrash, ejectDisks, hiddenFiles, desktopIcons,
          lockScreen, displayOff, screenSaver
     // Pocket additions
-    case sleepNow, dockAutohide, clearClipboard, restartFinder
+    case sleepNow, dockAutohide, clearClipboard, restartFinder, cleaningMode
 
     var id: String { rawValue }
 
     /// Pocket drops the keyboard light, appearance and hidden-files toggles.
     static var allCases: [QuickToggleAction] {
         [.micMute, .emptyTrash, .ejectDisks, .desktopIcons, .lockScreen, .displayOff, .screenSaver,
-         .sleepNow, .dockAutohide, .clearClipboard, .restartFinder]
+         .sleepNow, .dockAutohide, .clearClipboard, .restartFinder, .cleaningMode]
     }
 
     var feature: AppFeature {
-        self == .micMute ? .micMute : .quickToggles
+        switch self {
+        case .micMute: return .micMute
+        case .cleaningMode: return .cleaningMode
+        default: return .quickToggles
+        }
     }
 }
 

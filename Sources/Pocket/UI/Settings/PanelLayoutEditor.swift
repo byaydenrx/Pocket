@@ -150,6 +150,7 @@ struct PanelLayoutEditor: View {
 private extension PanelSectionID {
     func description(_ text: GeneralSettingsStrings) -> String {
         switch self {
+        case .appUpdates: return "Updates for your apps, from the App Store and the web."
         case .reminders: return "Your Reminders lists: check off, add and see what is due."
         case .downloads: return "Paste links, magnets or torrents and watch them download."
         case .taskManager: return "Your busiest apps, with one-click quit."

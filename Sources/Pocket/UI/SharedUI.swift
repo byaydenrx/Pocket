@@ -204,29 +204,11 @@ struct HUDBackdrop: View {
     }
 
     var body: some View {
-#if compiler(>=6.2)
-        if #available(macOS 26.0, *),
-           Self.drawsLiquidGlass(enabled: liquidGlassEnabled, reduceTransparency: reduceTransparency) {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(Color.clear)
-                .glassEffect(LiquidGlassSupport.glass(styleRaw: glassStyle),
-                             in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(colorScheme == .dark ? Color.black : Color.white)
-                        .opacity(LiquidGlassSupport.plateOpacity(styleRaw: glassStyle, tint: glassTint,
-                                                                 fallback: plateOpacity))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .strokeBorder(colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.08), lineWidth: 0.8)
-                )
+        if Self.drawsLiquidGlass(enabled: liquidGlassEnabled, reduceTransparency: reduceTransparency) {
+            PocketGlass(cornerRadius: cornerRadius)
         } else {
             classicBackdrop
         }
-#else
-        classicBackdrop
-#endif
     }
 
     @ViewBuilder

@@ -9,6 +9,12 @@ import SwiftUI
 /// Owns the Downloads window and the aria2c daemon behind it. aria2c runs
 /// only while the window is open or something is downloading; a minute after
 /// both stop it exits, so the feature costs nothing at rest.
+extension Notification.Name {
+    /// The menu panel finished closing (its tab views stay loaded, so their
+    /// onDisappear cannot be trusted for this).
+    static let pocketMenuPanelDidClose = Notification.Name("PocketMenuPanelDidClose")
+}
+
 @MainActor
 final class DownloadsService: NSObject {
     static let shared = DownloadsService()
@@ -39,6 +45,16 @@ final class DownloadsService: NSObject {
     }
 
     private var panelVisible = false
+    private var watchdog: Timer?
+    private var closeObserver: NSObjectProtocol?
+
+    override init() {
+        super.init()
+        closeObserver = NotificationCenter.default.addObserver(forName: .pocketMenuPanelDidClose, object: nil,
+                                                               queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.panelDisappeared() }
+        }
+    }
 
     /// Opens the menu panel; Downloads lives there as a tab. Links passed in
     /// (magnets, URLs, .torrent files) are added right away.
@@ -61,6 +77,15 @@ final class DownloadsService: NSObject {
     }
 
     private func startDaemon() {
+        if watchdog == nil {
+            // Belt and braces: whatever path started aria2c, it never idles for long.
+            let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.stopIfIdle() }
+            }
+            timer.tolerance = 5
+            RunLoop.main.add(timer, forMode: .common)
+            watchdog = timer
+        }
         if activeWatch == nil {
             activeWatch = store.$activeCount.removeDuplicates().sink { [weak self] _ in
                 self?.scheduleIdleCheck()
@@ -71,21 +96,27 @@ final class DownloadsService: NSObject {
         store.requestNotifications()
     }
 
+    /// aria2c runs only while Downloads is on screen or something is
+    /// actually downloading; 20 seconds after both stop, it exits.
     private func scheduleIdleCheck() {
         idleTimer?.invalidate()
         idleTimer = nil
         guard store.ready, !panelVisible, store.activeCount == 0 else { return }
-        idleTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self, !self.panelVisible, self.store.activeCount == 0 else { return }
-                self.shutdown()
-            }
+        idleTimer = Timer.scheduledTimer(withTimeInterval: 20, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.stopIfIdle() }
         }
+    }
+
+    private func stopIfIdle() {
+        guard store.ready, !panelVisible, store.activeCount == 0 else { return }
+        shutdown()
     }
 
     private func shutdown() {
         idleTimer?.invalidate()
         idleTimer = nil
+        watchdog?.invalidate()
+        watchdog = nil
         activeWatch = nil
         if store.ready { store.quit() }
     }

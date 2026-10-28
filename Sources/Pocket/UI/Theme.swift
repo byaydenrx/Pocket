@@ -194,25 +194,15 @@ private struct PanelGlassSurface: View {
         }
     }
 
+    /// On macOS 26 the popover itself is system Liquid Glass; drawing
+    /// another layer over it is what made the panel heavier than the rest.
     @ViewBuilder
     private var surface: some View {
-#if compiler(>=6.2)
-        if #available(macOS 26.0, *), liquidGlassEnabled, !reduceTransparency {
-            Rectangle()
-                .fill(Color.clear)
-                .glassEffect(LiquidGlassSupport.glass(styleRaw: glassStyle), in: Rectangle())
-                .overlay(
-                    Rectangle()
-                        .fill((colorScheme == .dark ? Color.black : Color.white)
-                            .opacity(LiquidGlassSupport.plateOpacity(styleRaw: glassStyle, tint: glassTint,
-                                                                     fallback: 0)))
-                )
+        if LiquidGlassSupport.isSupported, liquidGlassEnabled, !reduceTransparency {
+            Color.clear
         } else {
             standardSurface
         }
-#else
-        standardSurface
-#endif
     }
 
     @ViewBuilder

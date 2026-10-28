@@ -75,7 +75,10 @@ final class NetworkSampler {
         if counters.sent >= prev.counters.sent {
             totalUp += counters.sent - prev.counters.sent
         }
-        return NetworkReading(downBytesPerSec: processDown ?? interfaceSpeed.down,
+        // Pocket: the per-process fallback can read 0 while the interface
+        // sees real traffic; show whichever saw more, never a false zero.
+        let down = max(processDown ?? 0, interfaceSpeed.down)
+        return NetworkReading(downBytesPerSec: down,
                               upBytesPerSec: interfaceSpeed.up,
                               totalDown: totalDown, totalUp: totalUp)
     }

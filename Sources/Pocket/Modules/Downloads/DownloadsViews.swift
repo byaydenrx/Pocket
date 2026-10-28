@@ -473,6 +473,10 @@ struct DownloadsSection: View {
             }
             .onAppear { DownloadsService.shared.panelAppeared() }
             .onDisappear { DownloadsService.shared.panelDisappeared() }
+            // The panel keeps this view loaded between openings.
+            .onReceive(NotificationCenter.default.publisher(for: .menuPanelWillShow)) { _ in
+                DownloadsService.shared.panelAppeared()
+            }
         }
     }
 

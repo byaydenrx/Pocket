@@ -387,6 +387,7 @@ enum DefaultsKey {
     static let panelToggleDockAutohide = "panelToggleDockAutohide"
     static let panelToggleClearClipboard = "panelToggleClearClipboard"
     static let panelToggleRestartFinder = "panelToggleRestartFinder"
+    static let panelToggleCleaningMode = "panelToggleCleaningMode"
 
     // System monitor — live metrics shown next to the menu bar icon (opt-in).
     static let menuBarCPU = "menuBarCPU"
@@ -1640,6 +1641,7 @@ enum Defaults {
         DefaultsKey.panelToggleDockAutohide: true,
         DefaultsKey.panelToggleClearClipboard: true,
         DefaultsKey.panelToggleRestartFinder: false,
+        DefaultsKey.panelToggleCleaningMode: true,
         // Menu bar metrics start off (the icon stays clean) and are opt-in.
         // The panel shows every monitoring block by default; users hide what
         // they don't want.

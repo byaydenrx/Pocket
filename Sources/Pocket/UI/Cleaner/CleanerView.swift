@@ -929,6 +929,11 @@ struct CleanerView: View {
             Text(l10n.s.uninstallerDoneTitle).font(.system(size: compact ? 17 : 20, weight: .bold))
             Text(String(format: l10n.s.uninstallerFreedFormat, Self.byteString(freed)))
                 .font(.system(size: 13)).foregroundStyle(.secondary)
+            if cleaner.lastMovedToTrash > 0 {
+                Text("\(Self.byteString(cleaner.lastMovedToTrash)) more is in the Trash and is freed when you empty it.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
             Text(l10n.s.cleanerDoneNote)
                 .font(.caption).foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)

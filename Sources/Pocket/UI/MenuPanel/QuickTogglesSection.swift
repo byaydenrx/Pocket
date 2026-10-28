@@ -87,6 +87,7 @@ struct QuickTogglesList: View {
     @AppStorage(DefaultsKey.panelToggleDockAutohide) private var showDockAutohide = true
     @AppStorage(DefaultsKey.panelToggleClearClipboard) private var showClearClipboard = true
     @AppStorage(DefaultsKey.panelToggleRestartFinder) private var showRestartFinder = false
+    @AppStorage(DefaultsKey.panelToggleCleaningMode) private var showCleaningMode = true
     @AppStorage(DefaultsKey.panelToggleOrder) private var toggleOrderRaw = ""
 
     let editing: Bool
@@ -168,6 +169,7 @@ struct QuickTogglesList: View {
         case .dockAutohide: return $showDockAutohide
         case .clearClipboard: return $showClearClipboard
         case .restartFinder: return $showRestartFinder
+        case .cleaningMode: return $showCleaningMode
         }
     }
 
@@ -362,6 +364,19 @@ struct QuickTogglesList: View {
                                 captionStaysVisible: reportsState(item),
                                 action: {
                                     QuickTogglesService.shared.relaunchFinder()
+                                })
+        case .cleaningMode:
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", l10n.s.cleaningMenuItem),
+                                caption: l10n.s.cleaningPanelCaption,
+                                systemImage: "bubbles.and.sparkles",
+                                isEditing: editing,
+                                showsDragHandle: true,
+                                visibility: visibilityBinding(item),
+                                action: {
+                                    dismissSurface()
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        CleaningModeManager.shared.activate()
+                                    }
                                 })
         }
     }

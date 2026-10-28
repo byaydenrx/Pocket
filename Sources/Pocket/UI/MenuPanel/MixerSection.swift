@@ -906,135 +906,95 @@ private struct MixerRow: View {
     /// bitmap must be requested at this size or the upscale looks blurry.
     private static let iconPointSize: CGFloat = 32
 
+    @State private var hovering = false
+
+    /// FineTune's row: one line in a soft rounded card. Activity, icon, name,
+    /// a thin slider whose knob shows on hover, the percentage, mute and the
+    /// output menu. Warnings sit under it when there are any.
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
-            ZStack(alignment: .bottomTrailing) {
-                Image(nsImage: ResponsibleProcess.icon(for: app.ownerPid,
-                                                       pointSize: Self.iconPointSize))
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(app.isPlaying ? PanelMetricColor.green(for: colorScheme) : Color.primary.opacity(0.15))
+                    .frame(width: 5, height: 5)
+                Image(nsImage: ResponsibleProcess.icon(for: app.ownerPid, pointSize: 22))
                     .resizable()
-                    .frame(width: Self.iconPointSize, height: Self.iconPointSize)
-                if app.isPlaying {
-                    Circle()
-                        .fill(PanelMetricColor.green(for: colorScheme))
-                        .frame(width: 8, height: 8)
-                        .overlay(Circle().stroke(Color(nsColor: .windowBackgroundColor), lineWidth: 1.2))
-                        .offset(x: -1, y: -1)
+                    .frame(width: 22, height: 22)
+                Text(app.name)
+                    .font(.system(size: 13))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(width: 78, alignment: .leading)
+                    .help(app.name)
+                if isPinned {
+                    Image(systemName: "pin.fill").font(.system(size: 8)).foregroundStyle(.secondary)
                 }
-            }
-            .help(arrangementStrings.arrange)
-
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 8) {
-                    Text(app.name)
-                        .font(.system(size: 11.5, weight: .medium))
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .help(arrangementStrings.arrange)
-
-                    if isPinned {
-                        Image(systemName: "pin.fill")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.secondary)
-                            .accessibilityLabel(arrangementStrings.pin)
-                    }
-                    Spacer(minLength: 4)
-
-                    if app.persistenceID != nil {
-                        Menu { arrangementActions } label: {
-                            Image(systemName: "ellipsis")
-                        }
-                        .menuStyle(.borderlessButton)
-                        .menuIndicator(.hidden)
-                        .fixedSize()
-                        .help(arrangementStrings.actions)
-                        .accessibilityLabel("\(arrangementStrings.actions): \(app.name)")
-                    }
-                    if !app.isBypassed {
-                        outputPicker
-                    }
-                }
-
                 if app.isBypassed {
                     Text(app.supportsVolumeOverride ? sharingStrings.protectedCaption : l10n.s.mixerBypassedCaption)
                         .font(.system(size: 10.5))
                         .foregroundStyle(.secondary)
-                        .lineLimit(app.supportsVolumeOverride ? nil : 2)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(2)
+                    Spacer(minLength: 0)
                 } else {
-                    HStack(spacing: 8) {
-                        MixerVolumeSlider(value: volumeBinding,
-                                          normalTint: normalTint,
-                                          boostTint: boostColor,
-                                          isBoosting: isBoosting,
-                                          accentRevision: accentRevision,
-                                          glassEnabled: glassEnabled,
-                                          maximum: AppVolumeMixer.maxVolume,
-                                          accessibilityLabel: app.name)
-
-                        EditableVolumePercent(currentPercent: MixerRoutingSupport.displayPercent(forVolume: app.volume),
-                                              maximumPercent: Int(AppVolumeMixer.maxVolume * 100),
-                                              width: 42,
-                                              editorID: "app:\(app.id)",
-                                              editingID: $editingVolumeID,
-                                              accessibilityLabel: app.name) {
-                            HStack(spacing: 2) {
-                                if isBoosting {
-                                    Image(systemName: "bolt.fill")
-                                        .font(.system(size: 8, weight: .bold))
-                                        .foregroundStyle(boostColor)
-                                }
-                                Text("\(MixerRoutingSupport.displayPercent(forVolume: app.volume))%")
-                                    .font(.system(size: 10.5, weight: .medium))
-                                    .monospacedDigit()
-                                    .foregroundStyle(isBoosting ? boostColor : Color.secondary)
-                            }
-                        } onCommit: {
-                            mixer.setVolume($0, for: app)
-                        }
-
-                        Button {
-                            mixer.setVolume(1, for: app)
-                        } label: {
-                            Image(systemName: "arrow.counterclockwise")
-                                .font(.system(size: 9.5, weight: .semibold))
-                                .foregroundStyle(isBoosting ? boostColor : Color.secondary)
-                                .frame(width: 14)
-                        }
-                        .buttonStyle(.plain)
-                        .help(l10n.s.mixerResetTooltip)
-                        .opacity(isAtUnity ? 0 : 1)
-                        .disabled(isAtUnity)
-
-                        Button {
-                            mixer.toggleMute(app)
-                        } label: {
-                            Image(systemName: app.volume <= 0.001 ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(app.volume <= 0.001
-                                                 ? PanelMetricColor.red(for: colorScheme)
-                                                 : Color.secondary)
-                                .frame(width: 16)
-                        }
-                        .buttonStyle(.plain)
+                    FineTuneStyleSlider(value: volumeBinding, maximum: AppVolumeMixer.maxVolume,
+                                        tint: isBoosting ? boostColor : normalTint)
+                        .overlay(SliderScrollArea(value: volumeBinding, range: 0...AppVolumeMixer.maxVolume))
+                        .accessibilityLabel(app.name)
+                    EditableVolumePercent(currentPercent: MixerRoutingSupport.displayPercent(forVolume: app.volume),
+                                          maximumPercent: Int(AppVolumeMixer.maxVolume * 100),
+                                          width: 36,
+                                          editorID: "app:\(app.id)",
+                                          editingID: $editingVolumeID,
+                                          accessibilityLabel: app.name) {
+                        Text("\(MixerRoutingSupport.displayPercent(forVolume: app.volume))%")
+                            .font(.system(size: 11, weight: .medium, design: .monospaced))
+                            .foregroundStyle(isBoosting ? boostColor : Color.secondary)
+                    } onCommit: {
+                        mixer.setVolume($0, for: app)
                     }
-
-                    if app.supportsVolumeOverride {
-                        Label(sharingStrings.sharingWarning, systemImage: "exclamationmark.triangle")
-                            .font(.system(size: 9.5))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        mixer.toggleMute(app)
+                    } label: {
+                        Image(systemName: app.volume <= 0.001 ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                            .font(.system(size: 11))
+                            .foregroundStyle(app.volume <= 0.001 ? PanelMetricColor.red(for: colorScheme) : Color.secondary)
+                            .frame(width: 18)
                     }
-                    if app.outputDeviceUnavailable {
-                        Label(l10n.s.mixerOutputFallback, systemImage: "speaker.badge.exclamationmark")
-                            .font(.system(size: 9.5))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+                    .buttonStyle(.plain)
+                    .help(app.volume <= 0.001 ? "Unmute" : "Mute")
+                    outputMenu
+                }
+                if app.persistenceID != nil {
+                    Menu { arrangementActions } label: { Image(systemName: "ellipsis") }
+                        .menuStyle(.borderlessButton)
+                        .menuIndicator(.hidden)
+                        .fixedSize()
+                        .opacity(hovering ? 1 : 0.4)
+                        .help(arrangementStrings.actions)
                 }
             }
+            if !app.isBypassed, app.supportsVolumeOverride {
+                Label(sharingStrings.sharingWarning, systemImage: "exclamationmark.triangle")
+                    .font(.system(size: 9.5)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if app.outputDeviceUnavailable {
+                Label(l10n.s.mixerOutputFallback, systemImage: "speaker.badge.exclamationmark")
+                    .font(.system(size: 9.5)).foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(hovering ? 0.08 : 0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(Color(nsColor: .separatorColor).opacity(hovering ? 0.5 : 0.3), lineWidth: 0.5)
+        )
+        .onHover { hovering = $0 }
         .accessibilityAction(named: Text(arrangementStrings.moveUp)) { moveUp?() }
         .accessibilityAction(named: Text(arrangementStrings.moveDown)) { moveDown?() }
         .contextMenu {
@@ -1046,6 +1006,29 @@ private struct MixerRow: View {
                 }
             }
         }
+    }
+
+    /// The output device as an icon menu, like FineTune's device picker.
+    private var outputMenu: some View {
+        Menu {
+            Picker(l10n.s.mixerOutputTooltip, selection: outputSelectionBinding) {
+                Text(l10n.s.mixerOutputDefault).tag(MixerRoutingSupport.systemDefaultSelectionID)
+                ForEach(mixer.outputDevices) { device in
+                    Text(outputDeviceTitle(device)).tag(device.uid)
+                }
+                if mixer.outputDevices.contains(where: { MixerRoutingSupport.isAirPlaySentinel($0.uid) }) {
+                    Text(l10n.s.mixerAirPlayChooseSpeaker).tag(MixerRoutingSupport.airPlaySpeakerChoiceID)
+                }
+            }
+            .pickerStyle(.inline)
+        } label: {
+            Image(systemName: app.selectedOutputDeviceUID == nil ? "hifispeaker" : "hifispeaker.fill")
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .foregroundStyle(.secondary)
+        .help(l10n.s.mixerOutputTooltip)
     }
 
     @ViewBuilder
@@ -1371,11 +1354,8 @@ private struct MixerVolumeSlider: View {
         Group {
 #if compiler(>=6.2)
             if #available(macOS 26.0, *), glassEnabled {
-                LiquidGlassMixerSlider(value: $value,
-                                       tint: activeTint,
-                                       isBoosting: isBoosting,
-                                       maximum: maximum,
-                                       accessibilityLabel: accessibilityLabel)
+                FineTuneStyleSlider(value: $value, maximum: maximum, tint: activeTint)
+                    .accessibilityLabel(accessibilityLabel)
             } else {
                 nativeSlider
                     .accessibilityLabel(accessibilityLabel)
@@ -1506,3 +1486,41 @@ private struct LiquidGlassMixerSlider: View {
     }
 }
 #endif
+
+
+/// FineTune's slider (GPL-3.0, github.com/ronitsingh10/FineTune): a thin
+/// accent track, with the native Liquid Glass knob only while hovered or dragged.
+struct FineTuneStyleSlider: View {
+    @Binding var value: Double
+    var maximum: Double = 1
+    var tint: Color = .accentColor
+    @State private var hovered = false
+    @State private var editing = false
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.primary.opacity(0.15)).frame(height: 4)
+                    Capsule().fill(tint)
+                        .frame(width: max(4, geo.size.width * CGFloat(min(max(value / maximum, 0), 1))), height: 4)
+                }
+                .frame(maxHeight: .infinity)
+                .allowsHitTesting(false)
+                if maximum > 1 {
+                    // Unity marker: where 100% sits on a boost-capable slider.
+                    Rectangle().fill(Color.primary.opacity(0.4))
+                        .frame(width: 1.5, height: 8)
+                        .position(x: geo.size.width * CGFloat(1 / maximum), y: geo.size.height / 2)
+                        .allowsHitTesting(false)
+                }
+                Slider(value: $value, in: 0...maximum) { editing = $0 }
+                    .controlSize(.mini)
+                    .tint(.clear)
+                    .opacity(hovered || editing ? 1 : 0.01)
+            }
+        }
+        .frame(height: 16)
+        .onHover { hovered = $0 }
+    }
+}

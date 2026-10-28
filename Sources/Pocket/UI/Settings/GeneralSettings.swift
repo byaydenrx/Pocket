@@ -325,34 +325,10 @@ struct MenuBarGlyph: View {
 /// Glass look shared by every Pocket surface: Clear (see-through, like the
 /// system's Clear Liquid Glass) or Tinted, plus a plate for readability.
 struct GlassStyleControls: View {
-    @AppStorage(LiquidGlassSupport.styleKey) private var glassStyle = GlassStyle.clear.rawValue
-    @AppStorage(LiquidGlassSupport.tintKey) private var glassTint = LiquidGlassSupport.defaultTint
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Glass style")
-                Spacer()
-                Picker("Glass style", selection: $glassStyle) {
-                    ForEach(GlassStyle.allCases) { style in
-                        Text(style.title).tag(style.rawValue)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
-            }
-            HStack {
-                Text("Darken glass")
-                Spacer()
-                Slider(value: $glassTint, in: 0...0.8)
-                    .frame(width: 160)
-                Text("\(Int((glassTint * 100).rounded()))%")
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .frame(width: 38, alignment: .trailing)
-            }
-            .help("Lays a soft plate over the glass so text stays readable over busy windows.")
-        }
+        Text("Pocket uses your Mac's own Liquid Glass, so it follows System Settings › Appearance › Liquid Glass (Clear or Tinted) like the rest of macOS.")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }

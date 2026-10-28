@@ -174,7 +174,7 @@ extension View {
     func pocketGlassCircle(highlighted: Bool = false) -> some View {
 #if compiler(>=6.2)
         if #available(macOS 26.0, *) {
-            glassEffect(.clear.interactive(), in: Circle())
+            glassEffect(.regular.interactive(), in: Circle())
                 .overlay(Circle().fill(Color.white.opacity(highlighted ? 0.14 : 0)))
         } else {
             background(Circle().fill(.ultraThinMaterial))

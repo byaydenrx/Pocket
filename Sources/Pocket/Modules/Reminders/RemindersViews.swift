@@ -137,7 +137,7 @@ struct RemindersSection: View {
     var collapsible = true
 
     var body: some View {
-        PanelSection(.reminders, title: PanelSectionID.reminders.title(L10n.shared.s), collapsible: collapsible) {
+        PanelSection(.reminders, title: PanelLayout.customTitle(for: .reminders) ?? "", collapsible: collapsible) {
             RemindersList()
         }
     }

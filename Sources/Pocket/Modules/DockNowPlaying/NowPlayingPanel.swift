@@ -136,7 +136,6 @@ struct DockNPEncoreView: View {
         .gesture(DragGesture(minimumDistance: 3)
             .onChanged { model.onDrag?($0.translation, false) }
             .onEnded { model.onDrag?($0.translation, true) })
-        .environment(\.colorScheme, .dark)
     }
 
     private var cover: some View {
