@@ -376,7 +376,7 @@ extension AppFeature {
         switch self {
         case .menuBarTimer, .downloads: return []
         case .dockNowPlaying: return [.accessibility, .automationPlayback]
-        case .reminders: return [.calendar]
+        case .reminders: return []  // asks for Reminders access itself
         case .storageAnalyzer: return [.fullDiskAccess]
         case .taskManager: return []
         case .menuBarManager: return []

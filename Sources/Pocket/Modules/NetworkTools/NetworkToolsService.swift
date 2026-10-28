@@ -82,8 +82,7 @@ final class NetworkToolsService: ObservableObject {
         guard let interface = CWWiFiClient.shared().interface(), interface.powerOn() else { return [] }
         var rows: [(String, String)] = []
         if let ssid = interface.ssid() { rows.append(("Network", ssid)) }
-        rows.append(("Signal", "\(interface.rssiValue()) dBm"))
-        rows.append(("Noise", "\(interface.noiseMeasurement()) dBm"))
+        if interface.rssiValue() != 0 { rows.append(("Signal", "\(interface.rssiValue()) dBm")) }
         if let channel = interface.wlanChannel() {
             let band: String
             switch channel.channelBand {
@@ -203,33 +202,45 @@ struct NetworkToolsExtras: View {
     @ObservedObject private var service = NetworkToolsService.shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if !service.wifi.isEmpty {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("WI-FI").font(.caption2.weight(.semibold)).foregroundStyle(.tertiary)
-                    ForEach(service.wifi, id: \.0) { item in
-                        HStack {
-                            Text(item.0).foregroundStyle(.secondary)
-                            Spacer()
-                            Text(item.1).monospaced().lineLimit(1)
-                        }
-                    }
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(service.wifi.filter { !($0.0 == "Signal" && $0.1.hasPrefix("0 ")) }, id: \.0) { item in
+                HStack {
+                    Text(item.0 == "Network" ? "Wi-Fi" : "Wi-Fi \(item.0.lowercased())")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                    Spacer()
+                    Text(item.1)
+                        .font(.system(size: 10.5, weight: .medium))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
             }
-            VStack(alignment: .leading, spacing: 3) {
-                Text("PING").font(.caption2.weight(.semibold)).foregroundStyle(.tertiary)
-                HStack {
-                    TextField("Host", text: $service.pingHost)
-                        .textFieldStyle(.roundedBorder)
-                        .onSubmit { service.ping() }
-                    Button(service.pinging ? "…" : "Ping") { service.ping() }.disabled(service.pinging)
+            HStack(spacing: 6) {
+                Text("Ping")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+                TextField("Host", text: $service.pingHost)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(.secondary)
+                    .onSubmit { service.ping() }
+                Button { service.ping() } label: {
+                    Image(systemName: service.pinging ? "ellipsis" : "play.fill").font(.system(size: 9, weight: .bold))
                 }
-                if let output = service.pingOutput {
-                    Text(output).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
-                }
+                .buttonStyle(.borderless)
+                .disabled(service.pinging)
+                .help("Ping this host")
+            }
+            if let output = service.pingOutput {
+                Text(output)
+                    .font(.system(size: 10).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .font(.system(size: 11))
         .onAppear { service.refresh() }
     }
 }

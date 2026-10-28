@@ -31,6 +31,14 @@ enum SettingsImport {
             defer { defaults.set(true, forKey: "pocketMigration.allFeaturesPresent.v1") }
             for feature in AppFeature.allCases { defaults.set(true, forKey: feature.availabilityKey) }
         }
+        // A ⌘-only module shortcut (one was saved as ⌘C) would steal the key
+        // from every app; clear any such leftover.
+        for key in [DownloadsService.shortcutKey, MenuBarTimerService.shortcutKey] {
+            if let raw = defaults.string(forKey: key), let shortcut = GlobalShortcut(storageValue: raw),
+               !PocketHotKey.isSafe(shortcut) {
+                defaults.set("", forKey: key)
+            }
+        }
         // Glass with no plate behind it read as empty; start from the
         // readable default once (the slider still goes lower).
         if !defaults.bool(forKey: "pocketMigration.glassPlate.v1") {

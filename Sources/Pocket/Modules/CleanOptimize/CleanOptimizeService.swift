@@ -170,7 +170,7 @@ struct CleanOptimizeView: View {
             .labelsHidden()
             switch tab {
             case 0: CleanerView(compact: true)
-            case 1: OptimizeList()
+            case 1: OptimizeList().panelCard()
             default:
                 StorageAnalyzerSettings(compact: true)
                     .frame(height: 400)

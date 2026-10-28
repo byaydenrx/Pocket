@@ -60,44 +60,17 @@ struct QuickToolsSettings: View {
 
             if AppFeature.quickToggles.isAvailable {
                 Section {
-                    Button {
-                        QuickTogglesService.shared.toggleDarkMode()
-                    } label: {
-                        Label(colorScheme == .dark
-                                ? FeatureStrings.quickToggles(l10n.language).darkModeToLight
-                                : FeatureStrings.quickToggles(l10n.language).darkModeToDark,
-                              systemImage: colorScheme == .dark ? "sun.max.fill" : "moon.fill")
-                    }
-                    if brightness.keyboardLightEnabled != nil {
-                        Toggle(isOn: Binding(
-                            get: { brightness.keyboardLightEnabled ?? false },
-                            set: { brightness.setKeyboardLightEnabled($0) }
-                        )) {
-                            Label(FeatureStrings.brightness(l10n.language).keyboardLight,
-                                  systemImage: "keyboard")
-                        }
-                        HStack(spacing: 8) {
-                            Slider(value: Binding(
-                                get: { Double(brightness.keyboardLightLevel ?? 0) },
-                                set: { brightness.setKeyboardLightLevel(Float($0)) }
-                            ), in: 0...1, onEditingChanged: brightness.keyboardLightDragChanged)
-                            .accessibilityLabel(
-                                FeatureStrings.brightness(l10n.language).keyboardLight)
-                            Text("\(Int(((brightness.keyboardLightLevel ?? 0) * 100).rounded()))%")
-                                .font(.caption.monospacedDigit())
-                                .foregroundStyle(.secondary)
-                                .frame(width: 34, alignment: .trailing)
-                        }
-                    }
-                    DiskExclusionsList()
-                    Text(FeatureStrings.quickToggles(l10n.language).panelCaption)
+                    Text("One-click actions in the menu panel's Quick Toggles tab. Show the ones you want, then drag to reorder and right-click to rename them in the panel's edit mode.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    ForEach(QuickToggleAction.allCases.filter { $0.feature.isAvailable }) { action in
+                        QuickToggleVisibilityRow(action: action)
+                    }
+                    DiskExclusionsList()
                 } header: {
                     Text(FeatureStrings.quickToggles(l10n.language).pageTitle)
                 }
                 .settingsFormSectionAnchor(.quickToggles)
-                .onAppear { brightness.refreshKeyboardLight() }
             }
 
             if AppFeature.micMute.isAvailable {
@@ -324,5 +297,39 @@ private struct CameraPermissionRow: View {
             }
             .controlSize(.small)
         }
+    }
+}
+
+
+/// Show or hide one quick toggle (the same switch as the panel's edit mode).
+private struct QuickToggleVisibilityRow: View {
+    let action: QuickToggleAction
+    @AppStorage private var shown: Bool
+
+    init(action: QuickToggleAction) {
+        self.action = action
+        let key: String
+        switch action {
+        case .darkMode: key = DefaultsKey.panelToggleDarkMode
+        case .keyboardLight: key = DefaultsKey.panelToggleKeyboardLight
+        case .micMute: key = DefaultsKey.panelToggleMicMute
+        case .emptyTrash: key = DefaultsKey.panelToggleEmptyTrash
+        case .ejectDisks: key = DefaultsKey.panelToggleEjectDisks
+        case .hiddenFiles: key = DefaultsKey.panelToggleHiddenFiles
+        case .desktopIcons: key = DefaultsKey.panelToggleDesktopIcons
+        case .lockScreen: key = DefaultsKey.panelToggleLockScreen
+        case .displayOff: key = DefaultsKey.panelToggleDisplayOff
+        case .screenSaver: key = DefaultsKey.panelToggleScreenSaver
+        case .sleepNow: key = DefaultsKey.panelToggleSleepNow
+        case .dockAutohide: key = DefaultsKey.panelToggleDockAutohide
+        case .clearClipboard: key = DefaultsKey.panelToggleClearClipboard
+        case .restartFinder: key = DefaultsKey.panelToggleRestartFinder
+        case .cleaningMode: key = DefaultsKey.panelToggleCleaningMode
+        }
+        _shown = AppStorage(wrappedValue: action != .restartFinder, key)
+    }
+
+    var body: some View {
+        Toggle(PocketNames.title("toggle.\(action.rawValue)", action.readableName), isOn: $shown)
     }
 }

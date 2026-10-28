@@ -40,8 +40,15 @@ final class PocketHotKey {
         return fallback
     }
 
+    /// ⌘ or ⇧⌘ alone belong to apps (⌘C, ⌘V, ⌘Q…); a global hot key there
+    /// would take the key away from every app.
+    static func isSafe(_ shortcut: GlobalShortcut) -> Bool {
+        let appOnly: Set<GlobalShortcutModifiers> = [[.command], [.command, .shift]]
+        return shortcut.isValid && !appOnly.contains(shortcut.modifiers)
+    }
+
     func register() {
-        guard let shortcut, shortcut.isValid else { unregister(); return }
+        guard let shortcut, Self.isSafe(shortcut) else { unregister(); return }
         if ref != nil, registered == shortcut { return }
         unregister()
         Self.installHandler()
@@ -118,6 +125,14 @@ struct PocketShortcutRow: View {
                     notCapturedAction: { error = l10n.s.shortcutNotCaptured },
                     invalidAction: { error = l10n.s.shortcutInvalid },
                     captureAction: { shortcut in
+                        guard PocketHotKey.isSafe(shortcut) else {
+                            error = "\(shortcut.displayString) is used by apps. Add ⌃ or ⌥ to it."
+                            return
+                        }
+                        if let conflict = GlobalShortcutRole.conflict(for: shortcut, excluding: nil, includeInactive: false) {
+                            error = String(format: l10n.s.shortcutConflictFormat, conflict.title(l10n.s))
+                            return
+                        }
                         error = nil
                         stored = shortcut.storageValue
                         onChange()

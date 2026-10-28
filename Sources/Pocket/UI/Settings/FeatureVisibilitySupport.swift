@@ -437,7 +437,7 @@ enum FeatureVisibilitySupport {
         case .windowLayout: return [.windowLayout, .windowMaximizer]
         case .autoQuit: return [.autoQuit]
         case .quitProtection: return [.quitWindowProtection]
-        case .clipboard: return [.clipboardHistory, .pastePlain, .finderCutPaste]
+        case .clipboard: return [.clipboardHistory, .pastePlain]
         case .cutPaste: return [.finderCutPaste, .finderRename]
         case .shelf: return [.shelf]
         case .media: return [.mediaTools]

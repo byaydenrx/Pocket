@@ -129,7 +129,7 @@ struct RemindersSection: View {
 
     var body: some View {
         PanelSection(.reminders, title: PanelSectionID.reminders.title(L10n.shared.s), collapsible: collapsible) {
-            RemindersList()
+            RemindersList().panelCard()
         }
     }
 }

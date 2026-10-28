@@ -101,9 +101,6 @@ struct GeneralSettings: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Toggle(text.liquidGlassOtherWindows, isOn: $appearance.liquidGlassEnabled)
                         .accessibilityLabel("\(appearanceStrings.liquidGlass), \(text.liquidGlassOtherWindows)")
-                    Toggle(FeatureStrings.notch(l10n.language).title,
-                           isOn: $appearance.notchLiquidGlassEnabled)
-                        .accessibilityLabel("\(appearanceStrings.liquidGlass), \(FeatureStrings.notch(l10n.language).title)")
                     GlassStyleControls()
                         .disabled(!appearance.liquidGlassEnabled)
                 }

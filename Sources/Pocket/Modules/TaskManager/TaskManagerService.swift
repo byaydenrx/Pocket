@@ -284,7 +284,7 @@ struct TaskManagerSection: View {
     var collapsible = true
     var body: some View {
         PanelSection(.taskManager, title: PanelSectionID.taskManager.title(L10n.shared.s), collapsible: collapsible) {
-            TaskManagerList()
+            TaskManagerList().panelCard()
         }
     }
 }

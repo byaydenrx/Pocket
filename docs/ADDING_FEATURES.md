@@ -14,3 +14,7 @@
 ## Keep it light
 
 A feature that is off must cost nothing: start timers, taps, observers and processes in `syncWithPreferences()` only when the feature's switch is on, and sample only while the view that shows the data is on screen.
+
+## See every page
+
+`Pocket --snapshot <folder>` renders each menu panel tab and Settings page to PNGs (layout only; offscreen rendering cannot draw Liquid Glass) plus `structure.txt` with the sidebar and tab order. Quit the running Pocket first.

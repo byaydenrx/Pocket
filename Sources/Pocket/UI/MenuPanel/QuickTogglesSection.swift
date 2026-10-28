@@ -21,9 +21,6 @@ struct QuickTogglesSection: View {
                 // Keep Awake lives here as a dropdown (its header collapses it).
                 if AppFeature.keepAwake.isAvailable {
                     KeepAwakeCard(collapsible: true)
-                        .padding(10)
-                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(Color.primary.opacity(0.05)))
                 }
                 QuickTogglesList(editing: editing, draggingItem: $draggingItem) {
                     appDelegate()?.closePopover()

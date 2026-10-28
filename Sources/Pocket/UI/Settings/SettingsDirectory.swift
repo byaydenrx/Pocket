@@ -124,7 +124,46 @@ enum SettingsDirectory {
             SettingsSidebarSection(id: 2, title: categories.files, items: rows(2) + byGroup.files),
         ]
         let remaining = grouped.filter { ![0, 1, 2, 4].contains($0.id) }
-        return [featured[0]] + featured.dropFirst().filter { !$0.items.isEmpty } + remaining
+        let upstream = [featured[0]] + featured.dropFirst().filter { !$0.items.isEmpty } + remaining
+        return pocketRegrouped(upstream)
+    }
+
+    /// Pocket's sidebar: the same rows, grouped the way the app is used.
+    private static func pocketRegrouped(_ sections: [SettingsSidebarSection]) -> [SettingsSidebarSection] {
+        let groups: [(id: Int, title: String, pages: [SettingsPage])] = [
+            (100, "Pocket", [.general, .features, .shortcuts]),
+            (101, "Menu Bar", [.monitor, .quickTools, .menuBarTimer, .reminders, .downloads, .appUpdates]),
+            (102, "Windows & Dock", [.switcher, .dock, .dockNowPlaying, .autoQuit, .quitProtection]),
+            (103, "Mac", [.display, .energy, .mouse, .cutPaste, .shelf]),
+            (104, "Maintenance", [.cleanOptimize, .storageAnalyzer, .taskManager]),
+            (105, "About", [.advanced, .releaseNotes]),
+        ]
+        var seen = Set<SettingsSidebarItem.ID>()
+        let all = sections.flatMap(\.items).filter { seen.insert($0.id).inserted }
+        var result: [SettingsSidebarSection] = []
+        var placed = Set<SettingsSidebarItem.ID>()
+        for group in groups {
+            var items: [SettingsSidebarItem] = []
+            if group.id == 103 {
+                // The mixer's rows live on General's page but belong with the Mac's controls.
+                for item in all where item.destination.page == .general
+                    && item.destination.sectionAnchor != nil
+                    && item.destination.sectionAnchor != .panelConfiguration && !placed.contains(item.id) {
+                    items.append(item)
+                    placed.insert(item.id)
+                }
+            }
+            for page in group.pages {
+                for item in all where item.destination.page == page && !placed.contains(item.id) {
+                    items.append(item)
+                    placed.insert(item.id)
+                }
+            }
+            if !items.isEmpty { result.append(SettingsSidebarSection(id: group.id, title: group.title, items: items)) }
+        }
+        let rest = all.filter { !placed.contains($0.id) }
+        if !rest.isEmpty { result.append(SettingsSidebarSection(id: 106, title: "More", items: rest)) }
+        return result
     }
 
     static func sidebarItems(_ s: Strings,
@@ -389,7 +428,7 @@ enum SettingsDirectory {
                                                  FeatureStrings.commandBar(language).searchPlaceholder,
                                                  FeatureStrings.commandBar(language).appCenterTitle,
                                                  FeatureStrings.commandBar(language).appAliasLabel]),
-                SettingsDirectoryItem(page: .quickTools, title: s.quickToolsTab, icon: "wand.and.rays",
+                SettingsDirectoryItem(page: .quickTools, title: "Quick Toggles", icon: "togglepower",
                                        featureKeywords: [
                                         (.quickLauncher, [s.launcherName]),
                                         (.micMute, [s.micMuteName, s.micMuteMenuBarToggle]),

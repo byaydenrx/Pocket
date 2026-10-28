@@ -151,32 +151,33 @@ struct DisplayControlsView: View {
                             Image(systemName: "sun.max").foregroundStyle(.secondary)
                         }
                     }
-                    Menu {
-                        let groups = Dictionary(grouping: screen.modes) { "\($0.width)×\($0.height)\($0.isHiDPI ? "h" : "")" }
-                        let keys = screen.modes.map { "\($0.width)×\($0.height)\($0.isHiDPI ? "h" : "")" }
-                        ForEach(Array(NSOrderedSet(array: keys)) as? [String] ?? [], id: \.self) { key in
-                            let options = groups[key] ?? []
-                            if options.count == 1, let mode = options.first {
-                                Button(title(mode, current: screen.current)) { service.apply(mode, to: screen.id) }
-                            } else if let first = options.first {
-                                Menu(title(first, current: screen.current, rate: false)) {
-                                    ForEach(options) { mode in
-                                        Button("\(Int(mode.refresh.rounded())) Hz") { service.apply(mode, to: screen.id) }
+                    HStack(spacing: 8) {
+                        Menu {
+                            let groups = Dictionary(grouping: screen.modes) { "\($0.width)×\($0.height)\($0.isHiDPI ? "h" : "")" }
+                            let keys = screen.modes.map { "\($0.width)×\($0.height)\($0.isHiDPI ? "h" : "")" }
+                            ForEach(Array(NSOrderedSet(array: keys)) as? [String] ?? [], id: \.self) { key in
+                                let options = groups[key] ?? []
+                                if options.count == 1, let mode = options.first {
+                                    Button(title(mode, current: screen.current)) { service.apply(mode, to: screen.id) }
+                                } else if let first = options.first {
+                                    Menu(title(first, current: screen.current, rate: false)) {
+                                        ForEach(options) { mode in
+                                            Button("\(Int(mode.refresh.rounded())) Hz") { service.apply(mode, to: screen.id) }
+                                        }
                                     }
                                 }
                             }
+                        } label: {
+                            Text("Resolution")
                         }
-                    } label: {
-                        Label("Resolution", systemImage: "rectangle.expand.vertical")
-                    }
-                    .fixedSize()
-                    HStack {
+                        .fixedSize()
+                        Spacer(minLength: 0)
                         if !screen.isMain {
                             Button("Make Main") { service.makeMain(screen.id) }
                         }
-                        if !screen.isBuiltIn, service.screens.count > 1 {
+                        if !screen.isMain, service.screens.count > 1 {
                             let main = service.screens.first(where: \.isMain)?.id
-                            Button(screen.mirrorOf != kCGNullDirectDisplay ? "Stop Mirroring" : "Mirror Main") {
+                            Button(screen.mirrorOf != kCGNullDirectDisplay ? "Stop Mirroring" : "Mirror") {
                                 service.setMirroring(screen.id, of: screen.mirrorOf != kCGNullDirectDisplay ? nil : main)
                             }
                         }
@@ -217,7 +218,7 @@ struct DisplaySection: View {
     var collapsible = true
     var body: some View {
         PanelSection(.display, title: PanelSectionID.display.title(L10n.shared.s), collapsible: collapsible) {
-            DisplayControlsView()
+            DisplayControlsView().panelCard()
         }
     }
 }

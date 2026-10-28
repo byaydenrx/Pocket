@@ -109,6 +109,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         HorizontalWheelScrolling.install()
         PanelLayout.resetCollapsedSectionsOnce(for: "2.15.1")
 
+        if let snapshotDir = PocketSnapshot.requestedDirectory {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                PocketSnapshot.run(to: snapshotDir)
+                exit(0)
+            }
+        }
+
         statusController = StatusItemController()
         statusController.onLeftClick = { [weak self] in
             self?.captureStatusClick()
@@ -1677,13 +1684,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         let aboutItem = NSMenuItem(title: strings.menuAbout, action: #selector(showAbout), keyEquivalent: "")
         aboutItem.target = self
         menu.addItem(aboutItem)
-
-        if AppFeature.uninstaller.isAvailable {
-            let uninstallItem = NSMenuItem(title: strings.uninstallerMenuItem,
-                                           action: #selector(menuOpenUninstaller), keyEquivalent: "")
-            uninstallItem.target = self
-            menu.addItem(uninstallItem)
-        }
 
         if AppFeature.shelf.isAvailable, UserDefaults.standard.bool(forKey: DefaultsKey.shelfEnabled) {
             let shelfItem = NSMenuItem(title: strings.shelfMenuItem,

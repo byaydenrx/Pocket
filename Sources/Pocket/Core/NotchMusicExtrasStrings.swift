@@ -79,7 +79,7 @@ extension FeatureStrings {
             playbackFailed: "Could not change playback.",
             allowPlayback: "Allow playback control",
             automationPermission: "Playback automation",
-            automationExplanation: "Some music apps require permission for their playback controls. Authorize the selected player from Dynamic Island; access is granted separately for each app.",
+            automationExplanation: "Lets Pocket read and control what Music is playing. macOS asks once per app.",
             queue: "Up next",
             queueDescription: "See the actual upcoming songs shared by your player.",
             enableQueue: "Show upcoming songs",
