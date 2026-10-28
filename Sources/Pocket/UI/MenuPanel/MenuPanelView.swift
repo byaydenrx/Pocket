@@ -2750,11 +2750,13 @@ struct KeepAwakeCard: View {
         )
     }
     var collapsible = true
+    /// False inside Quick Toggles, where the dropdown box carries the title.
+    var showsTitle = true
 
     var body: some View {
         // The collapsible header supplies the "Keep awake" title, so the card's
         // first row is just the live status and the on/off switch.
-        PanelSection(.keepAwake, title: l10n.s.keepAwakeTitle, collapsible: collapsible) {
+        PanelSection(.keepAwake, title: showsTitle ? l10n.s.keepAwakeTitle : "", collapsible: collapsible) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     if awake.isActive, awake.endDate != nil {
@@ -2832,7 +2834,7 @@ struct KeepAwakeCard: View {
                           disabled: awake.clamshellSetupInProgress,
                           captionIsError: awake.clamshellSetupFailed)
             }
-            .panelCard()
+            .panelCardIf(showsTitle)
         }
         .onAppear {
             defaultDuration = Defaults.sanitizedDefaultDuration(defaultDuration)

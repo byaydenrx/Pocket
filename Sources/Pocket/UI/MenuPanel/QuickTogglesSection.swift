@@ -18,20 +18,22 @@ struct QuickTogglesSection: View {
                      supportsEditing: true,
                      resetAction: QuickTogglesList.resetPanelDefaults) { editing in
             VStack(alignment: .leading, spacing: 12) {
-                // Keep Awake lives here as a dropdown (its header collapses it).
+                // Keep Awake and the timer live here as dropdowns, closed by default.
                 if AppFeature.keepAwake.isAvailable {
-                    KeepAwakeCard(collapsible: true)
+                    PocketDropdownBox(title: L10n.shared.s.keepAwakeTitle, systemImage: "moon.zzz.fill", key: "keepAwake") {
+                        KeepAwakeCard(collapsible: false, showsTitle: false)
+                    }
+                }
+                if AppFeature.menuBarTimer.isAvailable {
+                    PocketDropdownBox(title: "Timer", systemImage: "hourglass", key: "timer") {
+                        TimerPanelContent()
+                    }
                 }
                 QuickTogglesList(editing: editing, draggingItem: $draggingItem) {
                     appDelegate()?.closePopover()
                 }
             }
-            // Actions here activate other apps (the Finder restarting, System
-            // Events, the Trash confirmation), which would dismiss the panel
-            // mid-flow; holding it open keeps a toggle-back one click away.
-            // The status icon and switching tabs still close as always.
-            .onAppear { PanelInteractionState.shared.viewKeepsPopoverOpen = true }
-            .onDisappear { PanelInteractionState.shared.viewKeepsPopoverOpen = false }
+
         }
     }
 }

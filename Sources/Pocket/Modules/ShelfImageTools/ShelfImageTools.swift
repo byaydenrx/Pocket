@@ -420,6 +420,9 @@ struct ShelfImageToolsSettings: View {
 enum ShelfDragFiles {
     static func current() -> [URL] {
         let pasteboard = NSPasteboard(name: .drag)
+        // File promises (screenshot thumbnails, Mail attachments) are left
+        // alone: reading them mid-drag can disturb the drag's source.
+        guard pasteboard.types?.contains(.fileURL) == true else { return [] }
         return (pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL]) ?? []
     }
 }

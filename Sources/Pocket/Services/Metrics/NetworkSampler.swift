@@ -77,7 +77,9 @@ final class NetworkSampler {
         }
         // Pocket: the per-process fallback can read 0 while the interface
         // sees real traffic; show whichever saw more, never a false zero.
-        let down = max(processDown ?? 0, interfaceSpeed.down)
+        // Pocket: the interface counters are what Activity Monitor shows; the
+        // per-process estimate is only a stand-in for a frozen counter.
+        let down = counterFallback.isActive ? max(processDown ?? 0, interfaceSpeed.down) : interfaceSpeed.down
         return NetworkReading(downBytesPerSec: down,
                               upBytesPerSec: interfaceSpeed.up,
                               totalDown: totalDown, totalUp: totalUp)

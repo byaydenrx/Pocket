@@ -1442,6 +1442,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         // A recovered close can still report back after the next presentation.
         guard popoverIsClosing, !popover.isShown else { return }
         NotificationCenter.default.post(name: .pocketMenuPanelDidClose, object: nil)
+        // Tab views stay loaded between openings, so their onDisappear is not
+        // a reliable reset; a fresh opening must close on an outside click.
+        PanelInteractionState.shared.viewKeepsPopoverOpen = false
         finishPopoverClose()
     }
 

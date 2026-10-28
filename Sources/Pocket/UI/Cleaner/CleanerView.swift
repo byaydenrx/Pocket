@@ -263,7 +263,7 @@ struct CleanerView: View {
                 .buttonStyle(.borderedProminent)
             scheduleCard
             screenshotsCard
-            if !compact, !whatsAppEnabled { whatsAppOptInCard }
+            // Pocket: no WhatsApp downloads cleanup.
             // The Settings page has its own full tool for these downloads;
             // the panel gets this one-line home so the feature is findable
             // without opening Settings.

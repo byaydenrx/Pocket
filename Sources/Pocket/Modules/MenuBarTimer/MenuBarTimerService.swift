@@ -103,7 +103,7 @@ final class MenuBarTimerService: NSObject, NSPopoverDelegate {
     static let shortcutKey = "menuBarTimerShortcut"
     static let defaultShortcut = GlobalShortcut(keyCode: Int64(kVK_ANSI_T), modifiers: [.control, .option])
 
-    private lazy var model = TimerModel()
+    private(set) lazy var model = TimerModel()
     private var running = false
     private lazy var hotKey = PocketHotKey(defaultsKey: Self.shortcutKey, fallback: Self.defaultShortcut) { [weak self] in self?.hotKeyPressed() }
     private var statusItem: NSStatusItem?

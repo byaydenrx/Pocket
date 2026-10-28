@@ -12,12 +12,24 @@ struct TimerPopoverView: View {
     @ObservedObject var model: TimerModel
     @ObservedObject var sounds: TimerSoundLibrary
 
-    init(model: TimerModel) {
+    /// Inside the menu panel: no own size, padding or glass.
+    let embedded: Bool
+
+    init(model: TimerModel, embedded: Bool = false) {
         self.model = model
         self.sounds = model.sounds
+        self.embedded = embedded
     }
 
     var body: some View {
+        if embedded {
+            stack
+        } else {
+            popoverBody
+        }
+    }
+
+    private var stack: some View {
         VStack(alignment: .leading, spacing: 10) {
             if model.isActive {
                 TimerCountdownHeader(model: model)
@@ -28,6 +40,10 @@ struct TimerPopoverView: View {
             Divider().opacity(0.5)
             TimerSoundRow(sounds: sounds)
         }
+    }
+
+    private var popoverBody: some View {
+        stack
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(width: Self.width)
@@ -433,5 +449,16 @@ struct TimerAlarmView: View {
 struct TimerPanelBackground: View {
     var body: some View {
         HUDBackdrop(cornerRadius: 18, contrast: .high)
+    }
+}
+
+
+/// The timer inside the menu panel's Quick Toggles: the same field, presets,
+/// countdown and sound row as the menu bar popover.
+struct TimerPanelContent: View {
+    @ObservedObject private var model = MenuBarTimerService.shared.model
+
+    var body: some View {
+        TimerPopoverView(model: model, embedded: true)
     }
 }

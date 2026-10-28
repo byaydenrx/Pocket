@@ -135,6 +135,12 @@ extension View {
         modifier(PanelCardModifier(interactive: interactive, padded: padded))
     }
 
+    /// A panel card only when `on`; inside a dropdown box the box is the card.
+    @ViewBuilder
+    func panelCardIf(_ on: Bool) -> some View {
+        if on { panelCard() } else { self }
+    }
+
     /// A restrained glass base where the popover hosts full-size content.
     /// Inset content uses the popover's native material; see PanelGlassSurface.
     func panelGlassSurface() -> some View {

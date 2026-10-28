@@ -158,8 +158,25 @@ struct OptimizeList: View {
 
 struct CleanOptimizeView: View {
     @State private var tab = 0
+    /// The panel's content width, so switching tabs never resizes it.
+    static let width: CGFloat = 308
+    /// Settings shows the same three tabs at the page's width.
+    var inSettings = false
 
     var body: some View {
+        if inSettings {
+            content
+                .padding(22)
+                .frame(maxWidth: 760, maxHeight: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity)
+        } else {
+            content
+                .frame(width: Self.width)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: 10) {
             Picker("", selection: $tab) {
                 Text("Clean").tag(0)
@@ -173,7 +190,7 @@ struct CleanOptimizeView: View {
             case 1: OptimizeList().panelCard()
             default:
                 StorageAnalyzerSettings(compact: true)
-                    .frame(height: 400)
+                    .frame(height: inSettings ? 560 : 400)
             }
         }
     }
@@ -190,15 +207,6 @@ struct CleanOptimizeSection: View {
 
 struct CleanOptimizeSettings: View {
     var body: some View {
-        Form {
-            Section { Text(AppFeature.cleanOptimize.pocketDescription).font(.callout) }
-            Section("Optimize") { OptimizeList() }
-            Section("Clean") {
-                Text("Caches, logs, developer junk, app leftovers, the Trash and old device backups, with a preview before anything is removed.")
-                    .font(.caption).foregroundStyle(.secondary)
-                CleanerView()
-            }
-        }
-        .formStyle(.grouped)
+        CleanOptimizeView(inSettings: true)
     }
 }
