@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Vorssaint
 
-# Builds Vorssaint, assembles the .app bundle, signs it and (with --install)
+# Builds Pocket, assembles the .app bundle, signs it and (with --install)
 # installs it into /Applications.
 #
 # The bundle is staged in a temporary directory outside ~/Documents: folders synced
@@ -26,7 +26,7 @@ trap cleanup EXIT
 # into the build sweeps like any other ending.
 trap 'exit 1' INT TERM HUP
 
-# Flags: --dev builds the local-only "Vorssaint (Developer)" variant (its own
+# Flags: --dev builds the local-only "Pocket (Developer)" variant (its own
 # bundle id, so it coexists with the official app); --install puts it in /Applications.
 DEV=0
 INSTALL=0
@@ -43,16 +43,16 @@ for arg in "$@"; do
 done
 
 if (( DEV )); then
-    APP_NAME="Vorssaint (Developer)"
-    EXECUTABLE="VorssaintDeveloper"
-    APP_BUNDLE_ID="com.vorssaint.utils.dev"
-    BUILD_VARIANT_FLAGS=(-D VORSSAINT_DEVELOPMENT)
+    APP_NAME="Pocket (Developer)"
+    EXECUTABLE="PocketDeveloper"
+    APP_BUNDLE_ID="com.byaydenrx.pocket.dev"
+    BUILD_VARIANT_FLAGS=(-D POCKET_DEVELOPMENT)
     APP_OPTIMIZATION_FLAGS=(-Onone)
     BUILD_CONFIGURATION="debug"
 else
-    APP_NAME="Vorssaint"
-    EXECUTABLE="Vorssaint"
-    APP_BUNDLE_ID="com.vorssaint.utils"
+    APP_NAME="Pocket"
+    EXECUTABLE="Pocket"
+    APP_BUNDLE_ID="com.byaydenrx.pocket"
     BUILD_VARIANT_FLAGS=()
     APP_OPTIMIZATION_FLAGS=(-O)
     BUILD_CONFIGURATION="release"
@@ -61,10 +61,10 @@ FAN_HELPER_ID="$APP_BUNDLE_ID.fan-control"
 # Now Playing is read through /usr/bin/perl loading this library; see
 # Sources/NowPlayingAdapter. Staged under Contents/Frameworks, signed on its own.
 NOW_PLAYING_ADAPTER_ID="$APP_BUNDLE_ID.now-playing"
-NOW_PLAYING_ADAPTER="libVorssaintNowPlaying.dylib"
+NOW_PLAYING_ADAPTER="libPocketNowPlaying.dylib"
 TARGET="arm64-apple-macosx14.0"
-ENTITLEMENTS="Resources/Vorssaint.entitlements"
-LEGACY_IDENTITY="Vorssaint Utils Signing"
+ENTITLEMENTS="Resources/Pocket.entitlements"
+LEGACY_IDENTITY="Pocket Utils Signing"
 
 developer_id_identity() {
     security find-identity -v -p codesigning 2>/dev/null \
@@ -80,8 +80,8 @@ legacy_identity_installed() {
     local probe signed=1
     # A locked keychain still lists its identities but cannot sign with them,
     # and this one is locked after every reboot; unlock it before asking.
-    security unlock-keychain -p vorssaint-signing \
-        "$HOME/Library/Keychains/vorssaint-signing.keychain-db" 2>/dev/null || true
+    security unlock-keychain -p pocket-signing \
+        "$HOME/Library/Keychains/pocket-signing.keychain-db" 2>/dev/null || true
     probe="$(mktemp)"
     cp /bin/echo "$probe"
     /usr/bin/codesign --force --strip-disallowed-xattrs --sign "$LEGACY_IDENTITY" "$probe" \
@@ -184,8 +184,8 @@ finalize_installed_bundle_after_child() {
     echo "✓ Signature ready: $bundle"
 }
 
-if (( INSTALL && ! TEST )) && [[ "${VORSSAINT_INSTALL_CHILD:-0}" != "1" ]]; then
-    VORSSAINT_INSTALL_CHILD=1 "$0" "$@"
+if (( INSTALL && ! TEST )) && [[ "${POCKET_INSTALL_CHILD:-0}" != "1" ]]; then
+    POCKET_INSTALL_CHILD=1 "$0" "$@"
     child_status=$?
     if (( child_status != 0 )); then
         exit "$child_status"
@@ -224,13 +224,13 @@ discard_test_preferences() {
     # cfprefsd can recreate an emptied domain after the first removal. Require
     # two quiet checks, but keep a hard limit so persistent failures still fail CI.
     for attempt in {1..10}; do
-        for name in "vorss.tests." "com.vorssaint.tests."; do
+        for name in "vorss.tests." "com.byaydenrx.pocket.tests."; do
             rm -f "$preferences"/$name*.plist(N)
         done
         rm -f "$preferences/metrics-tests.plist"
         sleep 0.2
         survivors=$(find "$preferences" -maxdepth 1 \
-            \( -name "vorss.tests.*.plist" -o -name "com.vorssaint.tests.*.plist" \
+            \( -name "vorss.tests.*.plist" -o -name "com.byaydenrx.pocket.tests.*.plist" \
                -o -name "metrics-tests.plist" \) 2>/dev/null | wc -l | tr -d ' ')
         if [[ "$survivors" == "0" ]]; then
             quiet_passes=$((quiet_passes + 1))
@@ -250,331 +250,331 @@ if (( TEST )); then
     TEST_OBJECT_DIR="build/objects/tests"
     mkdir -p "$TEST_OBJECT_DIR"
     TEST_SOURCES=(
-        Sources/Vorssaint/Services/Media/MediaSupport.swift
-        Sources/Vorssaint/Core/QuitProtectionSupport.swift
-        Sources/Vorssaint/Core/QuitProtectionStrings.swift
-        Sources/Vorssaint/Core/Defaults.swift
-        Sources/Vorssaint/Core/NotchStrings.swift
-        Sources/Vorssaint/Core/NotchTourStrings.swift
-        Sources/Vorssaint/Core/NotchEditorStrings.swift
-        Sources/Vorssaint/UI/Settings/NotchSettingsTabRow.swift
-        Sources/Vorssaint/Core/NotchActivityStrings.swift
-        Sources/Vorssaint/Services/Notch/NotchTimerSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchAppFullscreen.swift
-        Sources/Vorssaint/Services/Notch/NotchTimerAlert.swift
-        Sources/Vorssaint/UI/Notch/NotchIslandAlert.swift
-        Sources/Vorssaint/Services/Notch/NotchAccessorySupport.swift
-        Sources/Vorssaint/Services/Notch/NotchAccessoryConnectionMonitor.swift
-        Sources/Vorssaint/Services/QuickTools/CameraPreviewSupport.swift
-        Sources/Vorssaint/Core/NotchMusicExtrasStrings.swift
-        Sources/Vorssaint/Core/NotchClipboardSizeStrings.swift
-        Sources/Vorssaint/Services/Notch/NotchLyricsSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchQueueSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchPreferredPlayer.swift
-        Sources/Vorssaint/Core/NotchFilesStrings.swift
-        Sources/Vorssaint/Core/NotchWatchStrings.swift
-        Sources/Vorssaint/Services/Notch/NotchWatchSupport.swift
-        Sources/Vorssaint/Core/NotchMascotStrings.swift
-        Sources/Vorssaint/Services/Notch/NotchMascotSupport.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarDropletMotion.swift
-        Sources/Vorssaint/Services/Notch/NotchFileToolsSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchDownloadSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchDownloadProgressObserver.swift
-        Sources/Vorssaint/Core/NotchCalendarStrings.swift
-        Sources/Vorssaint/Core/NotchNotificationStrings.swift
-        Sources/Vorssaint/Core/NotchGestureStrings.swift
-        Sources/Vorssaint/Core/NotchAgentStrings.swift
-        Sources/Vorssaint/Core/CodexAccountStrings.swift
-        Sources/Vorssaint/Services/Notch/NotchAgentSupport.swift
-        Sources/Vorssaint/Core/NotchLockScreenStrings.swift
-        Sources/Vorssaint/Services/Notch/NotchLockScreenSupport.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentUsageModels.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentPricing.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentLogObject.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentLogParser.swift
-        Sources/Vorssaint/Services/AgentUsage/Harness/AgentHarnessReader.swift
-        Sources/Vorssaint/Services/AgentUsage/Harness/ClaudeReader.swift
-        Sources/Vorssaint/Services/AgentUsage/Harness/CodexReader.swift
-        Sources/Vorssaint/Services/AgentUsage/Harness/OpenCodeReader.swift
-        Sources/Vorssaint/Services/AgentUsage/Harness/CopilotReader.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentUsageSummary.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentUsageStore.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentUsageArchive.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentClaudeAppUsage.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentCLIConversation.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentClaudeServer.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentCodexServer.swift
-        Sources/Vorssaint/Services/AgentUsage/CodexAccountLimits.swift
-        Sources/Vorssaint/Services/AgentUsage/CodexProfileLimitsService.swift
-        Sources/Vorssaint/Services/AgentUsage/AgentOpenCodeReader.swift
-        Sources/Vorssaint/Services/Notch/NotchGestureSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchSectionPaging.swift
-        Sources/Vorssaint/Services/Notch/NotchSliderEditing.swift
-        Sources/Vorssaint/Services/Notch/NotchNotificationSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchNotificationReaderCore.swift
-        Sources/Vorssaint/Services/Notch/NotchCalendarSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchKeepAwakeSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchAudioLevelSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchVolumeKeyGate.swift
-        Sources/Vorssaint/Services/Notch/NotchMusicSupport.swift
-        Sources/Vorssaint/UI/Notch/NotchDecorativeClock.swift
-        Sources/Vorssaint/Services/Notch/NotchBrowserArtworkSupport.swift
-        Sources/Vorssaint/UI/Notch/NotchEqualizerBars.swift
-        Sources/Vorssaint/UI/Notch/NotchScrollEdgeFade.swift
-        Sources/Vorssaint/UI/Notch/NotchAgentAnimationView.swift
-        Sources/Vorssaint/UI/WindowVisibilityReader.swift
-        Sources/Vorssaint/Services/Notch/NotchMusicAutomationSupport.swift
-        Sources/Vorssaint/Services/Notch/NotchMusicAutomation.swift
-        Sources/Vorssaint/Services/Notch/NotchPlaybackSource.swift
-        Sources/Vorssaint/Services/Notch/NotchPlaybackCommand.swift
-        Sources/Vorssaint/Services/Notch/NotchMusicCommandWriter.swift
-        Sources/Vorssaint/Core/FeatureCatalog.swift
-        Sources/Vorssaint/Core/FeaturePresets.swift
-        Sources/Vorssaint/Core/FeatureHubStrings.swift
-        Sources/Vorssaint/Core/MixerScreenSharingStrings.swift
-        Sources/Vorssaint/Core/ShortcutSettingsStrings.swift
-        Sources/Vorssaint/Core/SettingsBackupSupport.swift
-        Sources/Vorssaint/Core/BackupStrings.swift
-        Sources/Vorssaint/Core/SnippetStrings.swift
-        Sources/Vorssaint/Core/AlertSoundStrings.swift
-        Sources/Vorssaint/Core/BrightnessStrings.swift
-        Sources/Vorssaint/Core/MediaImageStrings.swift
-        Sources/Vorssaint/Core/QuickToggleStrings.swift
-        Sources/Vorssaint/Core/ScreenshotStrings.swift
-        Sources/Vorssaint/Core/RecentCaptureStrings.swift
-        Sources/Vorssaint/Core/RecorderStrings.swift
-        Sources/Vorssaint/Core/RecorderShareStrings.swift
-        Sources/Vorssaint/Core/CameraPreviewStrings.swift
-        Sources/Vorssaint/Core/WallpaperStrings.swift
-        Sources/Vorssaint/Services/Wallpaper/WallpaperSupport.swift
-        Sources/Vorssaint/UI/MenuPanel/WallpaperThumbnailView.swift
-        Sources/Vorssaint/Core/ScratchpadStrings.swift
-        Sources/Vorssaint/Core/FinderRenameStrings.swift
-        Sources/Vorssaint/Core/CommandBarStrings.swift
-        Sources/Vorssaint/Core/FeedbackStrings.swift
-        Sources/Vorssaint/Core/RadialMenuStrings.swift
-        Sources/Vorssaint/Core/MenuBarAppearanceStrings.swift
-        Sources/Vorssaint/Core/AppAppearance.swift
-        Sources/Vorssaint/Core/AppearanceStrings.swift
-        Sources/Vorssaint/Core/GeneralSettingsStrings.swift
-        Sources/Vorssaint/Core/SettingsPageStrings.swift
-        Sources/Vorssaint/Core/BatteryTimeStrings.swift
-        Sources/Vorssaint/Core/CPUCoreStrings.swift
-        Sources/Vorssaint/Core/MonitorLayoutStrings.swift
-        Sources/Vorssaint/Core/KeepAwakeStrings.swift
-        Sources/Vorssaint/Core/BluetoothSleepStrings.swift
-        Sources/Vorssaint/Core/PermissionGuideStrings.swift
-        Sources/Vorssaint/Core/FanControlStrings.swift
-        Sources/Vorssaint/Core/ConnectedDevicesStrings.swift
-        Sources/Vorssaint/Services/FanControl/FanControlSupport.swift
-        Sources/Vorssaint/Services/FanControl/FanControlResumeSupport.swift
-        Sources/Vorssaint/Services/Snippets/TextSnippetSupport.swift
-        Sources/Vorssaint/Services/RadialMenu/RadialMenuSupport.swift
-        Sources/Vorssaint/Services/QuickTools/ScratchpadSupport.swift
-        Sources/Vorssaint/Services/QuickTools/ScratchpadStore.swift
-        Sources/Vorssaint/Services/KillProcess/KillProcessSupport.swift
-        Sources/Vorssaint/Services/Recorder/RecorderSupport.swift
-        Sources/Vorssaint/Services/Recorder/RecorderSampleTiming.swift
-        Sources/Vorssaint/Services/Recorder/RecorderWriter.swift
-        Sources/Vorssaint/Services/Recorder/RecorderCaptureEngine.swift
-        Sources/Vorssaint/Core/RecorderExportStrings.swift
-        Sources/Vorssaint/Services/Recorder/RecorderComposer.swift
-        Sources/Vorssaint/Services/Recorder/RecorderComposerPlan.swift
-        Sources/Vorssaint/Services/Recorder/RecorderCursorSprite.swift
-        Sources/Vorssaint/Services/Recorder/RecorderTextRenderer.swift
-        Sources/Vorssaint/Services/Recorder/RecorderImageRenderer.swift
-        Sources/Vorssaint/Services/Recorder/RecorderExporter.swift
-        Sources/Vorssaint/Services/Recorder/RecorderGIFClipboard.swift
-        Sources/Vorssaint/Services/Recorder/RecorderGIFWriter.swift
-        Sources/Vorssaint/Services/Recorder/RecorderGIFWorkspace.swift
-        Sources/Vorssaint/Services/Recorder/RecorderComposition.swift
-        Sources/Vorssaint/Services/Recorder/RecordingSharingSupport.swift
-        Sources/Vorssaint/Services/PrivateFileStore.swift
-        Sources/Vorssaint/Services/Recorder/RecorderTakeStore.swift
-        Sources/Vorssaint/Services/Recorder/RecorderPresetImageStore.swift
-        Sources/Vorssaint/Services/Recorder/RecorderMotion.swift
-        Sources/Vorssaint/Services/Recorder/RecorderPointerTrack.swift
-        Sources/Vorssaint/Services/Recorder/RecorderTypingTrack.swift
-        Sources/Vorssaint/Services/Recorder/RecorderTimeline.swift
-        Sources/Vorssaint/Services/Recorder/RecorderTextOverlay.swift
-        Sources/Vorssaint/Services/Recorder/RecorderImageOverlay.swift
-        Sources/Vorssaint/Services/Recorder/RecorderBlurRegion.swift
-        Sources/Vorssaint/Services/Recorder/RecorderEditDocument.swift
-        Sources/Vorssaint/Core/AppInfo.swift
-        Sources/Vorssaint/Core/GlobalShortcut.swift
-        Sources/Vorssaint/Core/SymbolicHotKeys.swift
-        Sources/Vorssaint/Services/SystemShortcutTakeoverSupport.swift
-        Sources/Vorssaint/Core/Localization.swift
-        Sources/Vorssaint/Core/Localizations/Strings+*.swift
-        Sources/Vorssaint/Core/FeatureStrings.swift
-        Sources/Vorssaint/Core/KillProcessStrings.swift
-        Sources/Vorssaint/Core/PortManagerStrings.swift
-        Sources/Vorssaint/Core/WhatsAppDownloadStrings.swift
-        Sources/Vorssaint/Core/WhatsAppOrganizerStrings.swift
-        Sources/Vorssaint/Core/ReleaseNotes.swift
-        Sources/Vorssaint/Core/ReleaseDigest.swift
-        Sources/Vorssaint/Core/ReleaseChangeAliases.swift
-        Sources/Vorssaint/Core/WhatsNewStrings.swift
-        Sources/Vorssaint/Core/URLCleaning.swift
-        Sources/Vorssaint/Services/GeneralPasteboardAccess.swift
-        Sources/Vorssaint/Services/Clipboard/ClipboardHistoryWrite.swift
-        Sources/Vorssaint/Services/Audio/AirPlayRouteManager.swift
-        Sources/Vorssaint/Services/Audio/MixerRoutingSupport.swift
-        Sources/Vorssaint/Services/Audio/MusicLaunchSupport.swift
-        Sources/Vorssaint/Services/Bluetooth/BluetoothSleepSupport.swift
-        Sources/Vorssaint/UI/MenuPanel/MixerPercentNativeTextField.swift
-        Sources/Vorssaint/UI/MenuPanel/MixerAppDragSource.swift
-        Sources/Vorssaint/Services/Audio/BoostLimiter.swift
-        Sources/Vorssaint/Services/Audio/MixerRender.swift
-        Sources/Vorssaint/Services/Audio/PreciseVolumeRollerSupport.swift
-        Sources/Vorssaint/Services/DockPreview/DockPreviewSupport.swift
-        Sources/Vorssaint/Services/DockPreview/DockAutohideHold.swift
-        Sources/Vorssaint/Services/SpacesOrder/SpacesOrderHold.swift
-        Sources/Vorssaint/Services/Homebrew/HomebrewSupport.swift
-        Sources/Vorssaint/Services/Homebrew/HomebrewEnvironment.swift
-        Sources/Vorssaint/Services/AppUpdates/AppUpdatesSupport.swift
-        Sources/Vorssaint/Services/AppUpdates/AppUpdateFeedSupport.swift
-        Sources/Vorssaint/Core/AppUpdateStrings.swift
-        Sources/Vorssaint/Core/DiskImageInstallerStrings.swift
-        Sources/Vorssaint/Services/DiskImageInstaller/DiskImageInstallerSupport.swift
-        Sources/Vorssaint/UI/NonModalAlert.swift
-        Sources/Vorssaint/Services/Clipboard/ClipboardHistorySupport.swift
-        Sources/Vorssaint/Core/ColorValue.swift
-        Sources/Vorssaint/Services/Clipboard/ClipboardAutoClearSupport.swift
-        Sources/Vorssaint/Services/AutoQuit/AutoQuitSupport.swift
-        Sources/Vorssaint/Core/AutoQuitDockAppsStrings.swift
-        Sources/Vorssaint/Services/Shelf/ShelfSupport.swift
-        Sources/Vorssaint/Services/Shelf/ShelfFilePromiseTransfer.swift
-        Sources/Vorssaint/Core/ShelfPromiseDeliveryStrings.swift
-        Sources/Vorssaint/Services/Finder/FinderRenameSupport.swift
-        Sources/Vorssaint/Services/Update/UpdateInstallerSupport.swift
-        Sources/Vorssaint/Services/Update/UpdateServiceSupport.swift
-        Sources/Vorssaint/Services/InstalledApps.swift
-        Sources/Vorssaint/Services/LaunchAtLoginSupport.swift
-        Sources/Vorssaint/UI/Settings/SettingsSearchSupport.swift
-        Sources/Vorssaint/UI/Settings/SettingsSidebarSupport.swift
-        Sources/Vorssaint/UI/Settings/FeatureVisibilitySupport.swift
-        Sources/Vorssaint/UI/Onboarding/WhatsNewSupport.swift
-        Sources/Vorssaint/UI/Settings/SettingsWindow.swift
-        Sources/Vorssaint/Core/SettingsNavigationStrings.swift
-        Sources/Vorssaint/App/MenuBarSpacingSupport.swift
-        Sources/Vorssaint/App/MenuBarAllowanceSupport.swift
-        Sources/Vorssaint/App/ReopenRequestSupport.swift
-        Sources/Vorssaint/App/StatusItemAnchorSupport.swift
-        Sources/Vorssaint/Services/DockClick/DockClickSupport.swift
-        Sources/Vorssaint/Services/Finder/CutPasteProgressSupport.swift
-        Sources/Vorssaint/Services/Finder/CutPastePrivilegeSupport.swift
-        Sources/Vorssaint/Services/Finder/FinderPasteImageSupport.swift
-        Sources/Vorssaint/Services/MiddleClick/MiddleClickSupport.swift
-        Sources/Vorssaint/Services/MouseNavigation/MouseNavigationSupport.swift
-        Sources/Vorssaint/Services/MouseNavigation/MouseNavigationKeys.swift
-        Sources/Vorssaint/Services/MouseButtons/MouseButtonShortcutSupport.swift
-        Sources/Vorssaint/Services/MouseButtons/MouseSpacesGestureSupport.swift
-        Sources/Vorssaint/Services/MouseClickDebounce/MouseClickDebounceSupport.swift
-        Sources/Vorssaint/Services/MouseExceptions/MouseAppExceptionSupport.swift
-        Sources/Vorssaint/Services/MouseExceptions/MouseAppExceptions.swift
-        Sources/Vorssaint/Services/WindowServerSupport.swift
-        Sources/Vorssaint/Services/WindowMaximizerSupport.swift
-        Sources/Vorssaint/Core/MouseButtonStrings.swift
-        Sources/Vorssaint/Core/MouseClickDebounceStrings.swift
-        Sources/Vorssaint/Core/MouseExceptionStrings.swift
-        Sources/Vorssaint/Core/ClipboardIgnoredAppsStrings.swift
-        Sources/Vorssaint/Core/ClipboardRetentionStrings.swift
-        Sources/Vorssaint/Core/WindowLayoutIgnoredAppsStrings.swift
-        Sources/Vorssaint/Services/WindowLayout/WindowLayoutIgnoredApps.swift
-        Sources/Vorssaint/Core/WindowPreviewExclusionStrings.swift
-        Sources/Vorssaint/Core/WindowMaximizerExclusionStrings.swift
-        Sources/Vorssaint/Core/DiskExclusionStrings.swift
-        Sources/Vorssaint/Core/SwitcherAppRulesStrings.swift
-        Sources/Vorssaint/Services/QuickTools/QuickToolsSupport.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarSupport.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarPreferences.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarMath.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarUnits.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarColors.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarEmoji.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarLinks.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarDates.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarRowShortcuts.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarSystemSettingsSupport.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarFileSearchSupport.swift
-        Sources/Vorssaint/Services/CommandBar/CommandBarQueryMemory.swift
-        Sources/Vorssaint/Services/SpotlightNamesSupport.swift
-        Sources/Vorssaint/Services/QuickTools/MicMuteSupport.swift
-        Sources/Vorssaint/Services/QuickTools/QuickTogglesSupport.swift
-        Sources/Vorssaint/Services/QuickTools/ScreenshotCapturePolicy.swift
-        Sources/Vorssaint/Services/QuickTools/ScreenshotSupport.swift
-        Sources/Vorssaint/Services/QuickTools/ScreenshotCanvasSupport.swift
-        Sources/Vorssaint/UI/Settings/ScreenCaptureToolPicker.swift
-        Sources/Vorssaint/UI/Settings/MonitorToken.swift
-        Sources/Vorssaint/Services/QuickTools/ScreenshotRenderer.swift
-        Sources/Vorssaint/Services/QuickTools/ScreenshotImageLayerRendering.swift
-        Sources/Vorssaint/Services/QuickTools/RecentCaptureStore.swift
-        Sources/Vorssaint/Services/QuickTools/ScreenshotSharingSupport.swift
-        Sources/Vorssaint/Services/QuickTools/WindowActivationPolicy.swift
-        Sources/Vorssaint/Services/KeyboardDebounce/KeyboardDebounceSupport.swift
-        Sources/Vorssaint/Services/SuperKey/SuperKeySupport.swift
-        Sources/Vorssaint/Services/SuperKey/SuperKeyMappingGuard.swift
-        Sources/Vorssaint/Core/SuperKeyStrings.swift
-        Sources/Vorssaint/Core/InputSourceSelection.swift
-        Sources/Vorssaint/Services/SessionActivity.swift
-        Sources/Vorssaint/Services/SessionActivitySupport.swift
-        Sources/Vorssaint/Services/EventTimestamp.swift
-        Sources/Vorssaint/Services/OwnKeyEvent.swift
-        Sources/Vorssaint/Services/ScrollWheelSupport.swift
-        Sources/Vorssaint/Services/HorizontalWheelScrolling.swift
-        Sources/Vorssaint/Services/SmoothScrollSupport.swift
-        Sources/Vorssaint/Services/MouseAcceleration/MouseAccelerationSupport.swift
-        Sources/Vorssaint/Services/FocusFollowsMouse/FocusFollowsMouseSupport.swift
-        Sources/Vorssaint/Services/AssistiveKeyboard.swift
-        Sources/Vorssaint/Services/Switcher/SwitcherModels.swift
-        Sources/Vorssaint/Services/Switcher/WindowServerCaptureQueue.swift
-        Sources/Vorssaint/Services/Switcher/SwitcherSupport.swift
-        Sources/Vorssaint/Services/Switcher/SpaceHopSupport.swift
-        Sources/Vorssaint/Services/Switcher/WindowUseOrder.swift
-        Sources/Vorssaint/Services/Metrics/MetricFormat.swift
-        Sources/Vorssaint/Services/Metrics/VMStatisticsDecoder.swift
-        Sources/Vorssaint/Services/KeepAwakeAutomationSupport.swift
-        Sources/Vorssaint/Services/SudoersSupport.swift
-        Sources/Vorssaint/Services/Metrics/BatteryTimeSupport.swift
-        Sources/Vorssaint/Services/Metrics/BatteryPowerSupport.swift
-        Sources/Vorssaint/Services/BoundedProcessRunner.swift
-        Sources/Vorssaint/Services/DetachedProcess.swift
-        Sources/Vorssaint/Services/ShellSupport.swift
-        Sources/Vorssaint/Services/PortManager/PortManagerSupport.swift
-        Sources/Vorssaint/Services/Metrics/NetworkProcessSupport.swift
-        Sources/Vorssaint/Services/Metrics/NetworkSampler.swift
-        Sources/Vorssaint/Services/Metrics/NetworkAddressService.swift
-        Sources/Vorssaint/Services/Metrics/SpeedTest.swift
-        Sources/Vorssaint/Services/Metrics/PeripheralBatterySampler.swift
-        Sources/Vorssaint/Services/Metrics/PeripheralBatterySupport.swift
-        Sources/Vorssaint/Services/Metrics/DiskSupport.swift
-        Sources/Vorssaint/Services/Metrics/MonitorSamplingPolicy.swift
-        Sources/Vorssaint/Services/Metrics/USBDeviceSampler.swift
-        Sources/Vorssaint/Services/Metrics/CPUCoreSampler.swift
-        Sources/Vorssaint/Services/Metrics/MaxCapacityProbe.swift
-        Sources/Vorssaint/Services/Metrics/TemperatureSensorSelector.swift
-        Sources/Vorssaint/Services/Metrics/SustainedAlertGate.swift
-        Sources/Vorssaint/Services/WindowLayout/WindowLayoutSupport.swift
-        Sources/Vorssaint/Services/WindowLayout/WindowStageManagerSupport.swift
-        Sources/Vorssaint/Core/WindowStageManagerStrings.swift
-        Sources/Vorssaint/Services/WindowLayout/WindowGestureSupport.swift
-        Sources/Vorssaint/Core/WindowDirectionalStrings.swift
-        Sources/Vorssaint/Core/PointerDisplayStrings.swift
-        Sources/Vorssaint/Core/GraphScaleStrings.swift
-        Sources/Vorssaint/Core/NotchLowBatteryStrings.swift
-        Sources/Vorssaint/Services/CleaningMode/CleaningUnlockCounter.swift
-        Sources/Vorssaint/Services/CleaningMode/CleaningMouseReleaseGate.swift
-        Sources/Vorssaint/Services/Display/ExtraBrightnessSupport.swift
-        Sources/Vorssaint/Services/Display/BrightnessSupport.swift
-        Sources/Vorssaint/Services/Display/LidDimmingSupport.swift
-        Sources/Vorssaint/Services/Cleaner/CleanerSupport.swift
-        Sources/Vorssaint/Services/Cleaner/CleanerPolicy.swift
-        Sources/Vorssaint/Services/Cleaner/CleanerSchedule.swift
-        Sources/Vorssaint/Services/Uninstall/UninstallerSupport.swift
-        Sources/Vorssaint/Services/ManagedDownloads/WhatsAppDownloadSupport.swift
-        Sources/Vorssaint/Core/SecureInputSupport.swift
+        Sources/Pocket/Services/Media/MediaSupport.swift
+        Sources/Pocket/Core/QuitProtectionSupport.swift
+        Sources/Pocket/Core/QuitProtectionStrings.swift
+        Sources/Pocket/Core/Defaults.swift
+        Sources/Pocket/Core/NotchStrings.swift
+        Sources/Pocket/Core/NotchTourStrings.swift
+        Sources/Pocket/Core/NotchEditorStrings.swift
+        Sources/Pocket/UI/Settings/NotchSettingsTabRow.swift
+        Sources/Pocket/Core/NotchActivityStrings.swift
+        Sources/Pocket/Services/Notch/NotchTimerSupport.swift
+        Sources/Pocket/Services/Notch/NotchAppFullscreen.swift
+        Sources/Pocket/Services/Notch/NotchTimerAlert.swift
+        Sources/Pocket/UI/Notch/NotchIslandAlert.swift
+        Sources/Pocket/Services/Notch/NotchAccessorySupport.swift
+        Sources/Pocket/Services/Notch/NotchAccessoryConnectionMonitor.swift
+        Sources/Pocket/Services/QuickTools/CameraPreviewSupport.swift
+        Sources/Pocket/Core/NotchMusicExtrasStrings.swift
+        Sources/Pocket/Core/NotchClipboardSizeStrings.swift
+        Sources/Pocket/Services/Notch/NotchLyricsSupport.swift
+        Sources/Pocket/Services/Notch/NotchQueueSupport.swift
+        Sources/Pocket/Services/Notch/NotchPreferredPlayer.swift
+        Sources/Pocket/Core/NotchFilesStrings.swift
+        Sources/Pocket/Core/NotchWatchStrings.swift
+        Sources/Pocket/Services/Notch/NotchWatchSupport.swift
+        Sources/Pocket/Core/NotchMascotStrings.swift
+        Sources/Pocket/Services/Notch/NotchMascotSupport.swift
+        Sources/Pocket/Services/CommandBar/CommandBarDropletMotion.swift
+        Sources/Pocket/Services/Notch/NotchFileToolsSupport.swift
+        Sources/Pocket/Services/Notch/NotchDownloadSupport.swift
+        Sources/Pocket/Services/Notch/NotchDownloadProgressObserver.swift
+        Sources/Pocket/Core/NotchCalendarStrings.swift
+        Sources/Pocket/Core/NotchNotificationStrings.swift
+        Sources/Pocket/Core/NotchGestureStrings.swift
+        Sources/Pocket/Core/NotchAgentStrings.swift
+        Sources/Pocket/Core/CodexAccountStrings.swift
+        Sources/Pocket/Services/Notch/NotchAgentSupport.swift
+        Sources/Pocket/Core/NotchLockScreenStrings.swift
+        Sources/Pocket/Services/Notch/NotchLockScreenSupport.swift
+        Sources/Pocket/Services/AgentUsage/AgentUsageModels.swift
+        Sources/Pocket/Services/AgentUsage/AgentPricing.swift
+        Sources/Pocket/Services/AgentUsage/AgentLogObject.swift
+        Sources/Pocket/Services/AgentUsage/AgentLogParser.swift
+        Sources/Pocket/Services/AgentUsage/Harness/AgentHarnessReader.swift
+        Sources/Pocket/Services/AgentUsage/Harness/ClaudeReader.swift
+        Sources/Pocket/Services/AgentUsage/Harness/CodexReader.swift
+        Sources/Pocket/Services/AgentUsage/Harness/OpenCodeReader.swift
+        Sources/Pocket/Services/AgentUsage/Harness/CopilotReader.swift
+        Sources/Pocket/Services/AgentUsage/AgentUsageSummary.swift
+        Sources/Pocket/Services/AgentUsage/AgentUsageStore.swift
+        Sources/Pocket/Services/AgentUsage/AgentUsageArchive.swift
+        Sources/Pocket/Services/AgentUsage/AgentClaudeAppUsage.swift
+        Sources/Pocket/Services/AgentUsage/AgentCLIConversation.swift
+        Sources/Pocket/Services/AgentUsage/AgentClaudeServer.swift
+        Sources/Pocket/Services/AgentUsage/AgentCodexServer.swift
+        Sources/Pocket/Services/AgentUsage/CodexAccountLimits.swift
+        Sources/Pocket/Services/AgentUsage/CodexProfileLimitsService.swift
+        Sources/Pocket/Services/AgentUsage/AgentOpenCodeReader.swift
+        Sources/Pocket/Services/Notch/NotchGestureSupport.swift
+        Sources/Pocket/Services/Notch/NotchSectionPaging.swift
+        Sources/Pocket/Services/Notch/NotchSliderEditing.swift
+        Sources/Pocket/Services/Notch/NotchNotificationSupport.swift
+        Sources/Pocket/Services/Notch/NotchNotificationReaderCore.swift
+        Sources/Pocket/Services/Notch/NotchCalendarSupport.swift
+        Sources/Pocket/Services/Notch/NotchKeepAwakeSupport.swift
+        Sources/Pocket/Services/Notch/NotchSupport.swift
+        Sources/Pocket/Services/Notch/NotchAudioLevelSupport.swift
+        Sources/Pocket/Services/Notch/NotchVolumeKeyGate.swift
+        Sources/Pocket/Services/Notch/NotchMusicSupport.swift
+        Sources/Pocket/UI/Notch/NotchDecorativeClock.swift
+        Sources/Pocket/Services/Notch/NotchBrowserArtworkSupport.swift
+        Sources/Pocket/UI/Notch/NotchEqualizerBars.swift
+        Sources/Pocket/UI/Notch/NotchScrollEdgeFade.swift
+        Sources/Pocket/UI/Notch/NotchAgentAnimationView.swift
+        Sources/Pocket/UI/WindowVisibilityReader.swift
+        Sources/Pocket/Services/Notch/NotchMusicAutomationSupport.swift
+        Sources/Pocket/Services/Notch/NotchMusicAutomation.swift
+        Sources/Pocket/Services/Notch/NotchPlaybackSource.swift
+        Sources/Pocket/Services/Notch/NotchPlaybackCommand.swift
+        Sources/Pocket/Services/Notch/NotchMusicCommandWriter.swift
+        Sources/Pocket/Core/FeatureCatalog.swift
+        Sources/Pocket/Core/FeaturePresets.swift
+        Sources/Pocket/Core/FeatureHubStrings.swift
+        Sources/Pocket/Core/MixerScreenSharingStrings.swift
+        Sources/Pocket/Core/ShortcutSettingsStrings.swift
+        Sources/Pocket/Core/SettingsBackupSupport.swift
+        Sources/Pocket/Core/BackupStrings.swift
+        Sources/Pocket/Core/SnippetStrings.swift
+        Sources/Pocket/Core/AlertSoundStrings.swift
+        Sources/Pocket/Core/BrightnessStrings.swift
+        Sources/Pocket/Core/MediaImageStrings.swift
+        Sources/Pocket/Core/QuickToggleStrings.swift
+        Sources/Pocket/Core/ScreenshotStrings.swift
+        Sources/Pocket/Core/RecentCaptureStrings.swift
+        Sources/Pocket/Core/RecorderStrings.swift
+        Sources/Pocket/Core/RecorderShareStrings.swift
+        Sources/Pocket/Core/CameraPreviewStrings.swift
+        Sources/Pocket/Core/WallpaperStrings.swift
+        Sources/Pocket/Services/Wallpaper/WallpaperSupport.swift
+        Sources/Pocket/UI/MenuPanel/WallpaperThumbnailView.swift
+        Sources/Pocket/Core/ScratchpadStrings.swift
+        Sources/Pocket/Core/FinderRenameStrings.swift
+        Sources/Pocket/Core/CommandBarStrings.swift
+        Sources/Pocket/Core/FeedbackStrings.swift
+        Sources/Pocket/Core/RadialMenuStrings.swift
+        Sources/Pocket/Core/MenuBarAppearanceStrings.swift
+        Sources/Pocket/Core/AppAppearance.swift
+        Sources/Pocket/Core/AppearanceStrings.swift
+        Sources/Pocket/Core/GeneralSettingsStrings.swift
+        Sources/Pocket/Core/SettingsPageStrings.swift
+        Sources/Pocket/Core/BatteryTimeStrings.swift
+        Sources/Pocket/Core/CPUCoreStrings.swift
+        Sources/Pocket/Core/MonitorLayoutStrings.swift
+        Sources/Pocket/Core/KeepAwakeStrings.swift
+        Sources/Pocket/Core/BluetoothSleepStrings.swift
+        Sources/Pocket/Core/PermissionGuideStrings.swift
+        Sources/Pocket/Core/FanControlStrings.swift
+        Sources/Pocket/Core/ConnectedDevicesStrings.swift
+        Sources/Pocket/Services/FanControl/FanControlSupport.swift
+        Sources/Pocket/Services/FanControl/FanControlResumeSupport.swift
+        Sources/Pocket/Services/Snippets/TextSnippetSupport.swift
+        Sources/Pocket/Services/RadialMenu/RadialMenuSupport.swift
+        Sources/Pocket/Services/QuickTools/ScratchpadSupport.swift
+        Sources/Pocket/Services/QuickTools/ScratchpadStore.swift
+        Sources/Pocket/Services/KillProcess/KillProcessSupport.swift
+        Sources/Pocket/Services/Recorder/RecorderSupport.swift
+        Sources/Pocket/Services/Recorder/RecorderSampleTiming.swift
+        Sources/Pocket/Services/Recorder/RecorderWriter.swift
+        Sources/Pocket/Services/Recorder/RecorderCaptureEngine.swift
+        Sources/Pocket/Core/RecorderExportStrings.swift
+        Sources/Pocket/Services/Recorder/RecorderComposer.swift
+        Sources/Pocket/Services/Recorder/RecorderComposerPlan.swift
+        Sources/Pocket/Services/Recorder/RecorderCursorSprite.swift
+        Sources/Pocket/Services/Recorder/RecorderTextRenderer.swift
+        Sources/Pocket/Services/Recorder/RecorderImageRenderer.swift
+        Sources/Pocket/Services/Recorder/RecorderExporter.swift
+        Sources/Pocket/Services/Recorder/RecorderGIFClipboard.swift
+        Sources/Pocket/Services/Recorder/RecorderGIFWriter.swift
+        Sources/Pocket/Services/Recorder/RecorderGIFWorkspace.swift
+        Sources/Pocket/Services/Recorder/RecorderComposition.swift
+        Sources/Pocket/Services/Recorder/RecordingSharingSupport.swift
+        Sources/Pocket/Services/PrivateFileStore.swift
+        Sources/Pocket/Services/Recorder/RecorderTakeStore.swift
+        Sources/Pocket/Services/Recorder/RecorderPresetImageStore.swift
+        Sources/Pocket/Services/Recorder/RecorderMotion.swift
+        Sources/Pocket/Services/Recorder/RecorderPointerTrack.swift
+        Sources/Pocket/Services/Recorder/RecorderTypingTrack.swift
+        Sources/Pocket/Services/Recorder/RecorderTimeline.swift
+        Sources/Pocket/Services/Recorder/RecorderTextOverlay.swift
+        Sources/Pocket/Services/Recorder/RecorderImageOverlay.swift
+        Sources/Pocket/Services/Recorder/RecorderBlurRegion.swift
+        Sources/Pocket/Services/Recorder/RecorderEditDocument.swift
+        Sources/Pocket/Core/AppInfo.swift
+        Sources/Pocket/Core/GlobalShortcut.swift
+        Sources/Pocket/Core/SymbolicHotKeys.swift
+        Sources/Pocket/Services/SystemShortcutTakeoverSupport.swift
+        Sources/Pocket/Core/Localization.swift
+        Sources/Pocket/Core/Localizations/Strings+*.swift
+        Sources/Pocket/Core/FeatureStrings.swift
+        Sources/Pocket/Core/KillProcessStrings.swift
+        Sources/Pocket/Core/PortManagerStrings.swift
+        Sources/Pocket/Core/WhatsAppDownloadStrings.swift
+        Sources/Pocket/Core/WhatsAppOrganizerStrings.swift
+        Sources/Pocket/Core/ReleaseNotes.swift
+        Sources/Pocket/Core/ReleaseDigest.swift
+        Sources/Pocket/Core/ReleaseChangeAliases.swift
+        Sources/Pocket/Core/WhatsNewStrings.swift
+        Sources/Pocket/Core/URLCleaning.swift
+        Sources/Pocket/Services/GeneralPasteboardAccess.swift
+        Sources/Pocket/Services/Clipboard/ClipboardHistoryWrite.swift
+        Sources/Pocket/Services/Audio/AirPlayRouteManager.swift
+        Sources/Pocket/Services/Audio/MixerRoutingSupport.swift
+        Sources/Pocket/Services/Audio/MusicLaunchSupport.swift
+        Sources/Pocket/Services/Bluetooth/BluetoothSleepSupport.swift
+        Sources/Pocket/UI/MenuPanel/MixerPercentNativeTextField.swift
+        Sources/Pocket/UI/MenuPanel/MixerAppDragSource.swift
+        Sources/Pocket/Services/Audio/BoostLimiter.swift
+        Sources/Pocket/Services/Audio/MixerRender.swift
+        Sources/Pocket/Services/Audio/PreciseVolumeRollerSupport.swift
+        Sources/Pocket/Services/DockPreview/DockPreviewSupport.swift
+        Sources/Pocket/Services/DockPreview/DockAutohideHold.swift
+        Sources/Pocket/Services/SpacesOrder/SpacesOrderHold.swift
+        Sources/Pocket/Services/Homebrew/HomebrewSupport.swift
+        Sources/Pocket/Services/Homebrew/HomebrewEnvironment.swift
+        Sources/Pocket/Services/AppUpdates/AppUpdatesSupport.swift
+        Sources/Pocket/Services/AppUpdates/AppUpdateFeedSupport.swift
+        Sources/Pocket/Core/AppUpdateStrings.swift
+        Sources/Pocket/Core/DiskImageInstallerStrings.swift
+        Sources/Pocket/Services/DiskImageInstaller/DiskImageInstallerSupport.swift
+        Sources/Pocket/UI/NonModalAlert.swift
+        Sources/Pocket/Services/Clipboard/ClipboardHistorySupport.swift
+        Sources/Pocket/Core/ColorValue.swift
+        Sources/Pocket/Services/Clipboard/ClipboardAutoClearSupport.swift
+        Sources/Pocket/Services/AutoQuit/AutoQuitSupport.swift
+        Sources/Pocket/Core/AutoQuitDockAppsStrings.swift
+        Sources/Pocket/Services/Shelf/ShelfSupport.swift
+        Sources/Pocket/Services/Shelf/ShelfFilePromiseTransfer.swift
+        Sources/Pocket/Core/ShelfPromiseDeliveryStrings.swift
+        Sources/Pocket/Services/Finder/FinderRenameSupport.swift
+        Sources/Pocket/Services/Update/UpdateInstallerSupport.swift
+        Sources/Pocket/Services/Update/UpdateServiceSupport.swift
+        Sources/Pocket/Services/InstalledApps.swift
+        Sources/Pocket/Services/LaunchAtLoginSupport.swift
+        Sources/Pocket/UI/Settings/SettingsSearchSupport.swift
+        Sources/Pocket/UI/Settings/SettingsSidebarSupport.swift
+        Sources/Pocket/UI/Settings/FeatureVisibilitySupport.swift
+        Sources/Pocket/UI/Onboarding/WhatsNewSupport.swift
+        Sources/Pocket/UI/Settings/SettingsWindow.swift
+        Sources/Pocket/Core/SettingsNavigationStrings.swift
+        Sources/Pocket/App/MenuBarSpacingSupport.swift
+        Sources/Pocket/App/MenuBarAllowanceSupport.swift
+        Sources/Pocket/App/ReopenRequestSupport.swift
+        Sources/Pocket/App/StatusItemAnchorSupport.swift
+        Sources/Pocket/Services/DockClick/DockClickSupport.swift
+        Sources/Pocket/Services/Finder/CutPasteProgressSupport.swift
+        Sources/Pocket/Services/Finder/CutPastePrivilegeSupport.swift
+        Sources/Pocket/Services/Finder/FinderPasteImageSupport.swift
+        Sources/Pocket/Services/MiddleClick/MiddleClickSupport.swift
+        Sources/Pocket/Services/MouseNavigation/MouseNavigationSupport.swift
+        Sources/Pocket/Services/MouseNavigation/MouseNavigationKeys.swift
+        Sources/Pocket/Services/MouseButtons/MouseButtonShortcutSupport.swift
+        Sources/Pocket/Services/MouseButtons/MouseSpacesGestureSupport.swift
+        Sources/Pocket/Services/MouseClickDebounce/MouseClickDebounceSupport.swift
+        Sources/Pocket/Services/MouseExceptions/MouseAppExceptionSupport.swift
+        Sources/Pocket/Services/MouseExceptions/MouseAppExceptions.swift
+        Sources/Pocket/Services/WindowServerSupport.swift
+        Sources/Pocket/Services/WindowMaximizerSupport.swift
+        Sources/Pocket/Core/MouseButtonStrings.swift
+        Sources/Pocket/Core/MouseClickDebounceStrings.swift
+        Sources/Pocket/Core/MouseExceptionStrings.swift
+        Sources/Pocket/Core/ClipboardIgnoredAppsStrings.swift
+        Sources/Pocket/Core/ClipboardRetentionStrings.swift
+        Sources/Pocket/Core/WindowLayoutIgnoredAppsStrings.swift
+        Sources/Pocket/Services/WindowLayout/WindowLayoutIgnoredApps.swift
+        Sources/Pocket/Core/WindowPreviewExclusionStrings.swift
+        Sources/Pocket/Core/WindowMaximizerExclusionStrings.swift
+        Sources/Pocket/Core/DiskExclusionStrings.swift
+        Sources/Pocket/Core/SwitcherAppRulesStrings.swift
+        Sources/Pocket/Services/QuickTools/QuickToolsSupport.swift
+        Sources/Pocket/Services/CommandBar/CommandBarSupport.swift
+        Sources/Pocket/Services/CommandBar/CommandBarPreferences.swift
+        Sources/Pocket/Services/CommandBar/CommandBarMath.swift
+        Sources/Pocket/Services/CommandBar/CommandBarUnits.swift
+        Sources/Pocket/Services/CommandBar/CommandBarColors.swift
+        Sources/Pocket/Services/CommandBar/CommandBarEmoji.swift
+        Sources/Pocket/Services/CommandBar/CommandBarLinks.swift
+        Sources/Pocket/Services/CommandBar/CommandBarDates.swift
+        Sources/Pocket/Services/CommandBar/CommandBarRowShortcuts.swift
+        Sources/Pocket/Services/CommandBar/CommandBarSystemSettingsSupport.swift
+        Sources/Pocket/Services/CommandBar/CommandBarFileSearchSupport.swift
+        Sources/Pocket/Services/CommandBar/CommandBarQueryMemory.swift
+        Sources/Pocket/Services/SpotlightNamesSupport.swift
+        Sources/Pocket/Services/QuickTools/MicMuteSupport.swift
+        Sources/Pocket/Services/QuickTools/QuickTogglesSupport.swift
+        Sources/Pocket/Services/QuickTools/ScreenshotCapturePolicy.swift
+        Sources/Pocket/Services/QuickTools/ScreenshotSupport.swift
+        Sources/Pocket/Services/QuickTools/ScreenshotCanvasSupport.swift
+        Sources/Pocket/UI/Settings/ScreenCaptureToolPicker.swift
+        Sources/Pocket/UI/Settings/MonitorToken.swift
+        Sources/Pocket/Services/QuickTools/ScreenshotRenderer.swift
+        Sources/Pocket/Services/QuickTools/ScreenshotImageLayerRendering.swift
+        Sources/Pocket/Services/QuickTools/RecentCaptureStore.swift
+        Sources/Pocket/Services/QuickTools/ScreenshotSharingSupport.swift
+        Sources/Pocket/Services/QuickTools/WindowActivationPolicy.swift
+        Sources/Pocket/Services/KeyboardDebounce/KeyboardDebounceSupport.swift
+        Sources/Pocket/Services/SuperKey/SuperKeySupport.swift
+        Sources/Pocket/Services/SuperKey/SuperKeyMappingGuard.swift
+        Sources/Pocket/Core/SuperKeyStrings.swift
+        Sources/Pocket/Core/InputSourceSelection.swift
+        Sources/Pocket/Services/SessionActivity.swift
+        Sources/Pocket/Services/SessionActivitySupport.swift
+        Sources/Pocket/Services/EventTimestamp.swift
+        Sources/Pocket/Services/OwnKeyEvent.swift
+        Sources/Pocket/Services/ScrollWheelSupport.swift
+        Sources/Pocket/Services/HorizontalWheelScrolling.swift
+        Sources/Pocket/Services/SmoothScrollSupport.swift
+        Sources/Pocket/Services/MouseAcceleration/MouseAccelerationSupport.swift
+        Sources/Pocket/Services/FocusFollowsMouse/FocusFollowsMouseSupport.swift
+        Sources/Pocket/Services/AssistiveKeyboard.swift
+        Sources/Pocket/Services/Switcher/SwitcherModels.swift
+        Sources/Pocket/Services/Switcher/WindowServerCaptureQueue.swift
+        Sources/Pocket/Services/Switcher/SwitcherSupport.swift
+        Sources/Pocket/Services/Switcher/SpaceHopSupport.swift
+        Sources/Pocket/Services/Switcher/WindowUseOrder.swift
+        Sources/Pocket/Services/Metrics/MetricFormat.swift
+        Sources/Pocket/Services/Metrics/VMStatisticsDecoder.swift
+        Sources/Pocket/Services/KeepAwakeAutomationSupport.swift
+        Sources/Pocket/Services/SudoersSupport.swift
+        Sources/Pocket/Services/Metrics/BatteryTimeSupport.swift
+        Sources/Pocket/Services/Metrics/BatteryPowerSupport.swift
+        Sources/Pocket/Services/BoundedProcessRunner.swift
+        Sources/Pocket/Services/DetachedProcess.swift
+        Sources/Pocket/Services/ShellSupport.swift
+        Sources/Pocket/Services/PortManager/PortManagerSupport.swift
+        Sources/Pocket/Services/Metrics/NetworkProcessSupport.swift
+        Sources/Pocket/Services/Metrics/NetworkSampler.swift
+        Sources/Pocket/Services/Metrics/NetworkAddressService.swift
+        Sources/Pocket/Services/Metrics/SpeedTest.swift
+        Sources/Pocket/Services/Metrics/PeripheralBatterySampler.swift
+        Sources/Pocket/Services/Metrics/PeripheralBatterySupport.swift
+        Sources/Pocket/Services/Metrics/DiskSupport.swift
+        Sources/Pocket/Services/Metrics/MonitorSamplingPolicy.swift
+        Sources/Pocket/Services/Metrics/USBDeviceSampler.swift
+        Sources/Pocket/Services/Metrics/CPUCoreSampler.swift
+        Sources/Pocket/Services/Metrics/MaxCapacityProbe.swift
+        Sources/Pocket/Services/Metrics/TemperatureSensorSelector.swift
+        Sources/Pocket/Services/Metrics/SustainedAlertGate.swift
+        Sources/Pocket/Services/WindowLayout/WindowLayoutSupport.swift
+        Sources/Pocket/Services/WindowLayout/WindowStageManagerSupport.swift
+        Sources/Pocket/Core/WindowStageManagerStrings.swift
+        Sources/Pocket/Services/WindowLayout/WindowGestureSupport.swift
+        Sources/Pocket/Core/WindowDirectionalStrings.swift
+        Sources/Pocket/Core/PointerDisplayStrings.swift
+        Sources/Pocket/Core/GraphScaleStrings.swift
+        Sources/Pocket/Core/NotchLowBatteryStrings.swift
+        Sources/Pocket/Services/CleaningMode/CleaningUnlockCounter.swift
+        Sources/Pocket/Services/CleaningMode/CleaningMouseReleaseGate.swift
+        Sources/Pocket/Services/Display/ExtraBrightnessSupport.swift
+        Sources/Pocket/Services/Display/BrightnessSupport.swift
+        Sources/Pocket/Services/Display/LidDimmingSupport.swift
+        Sources/Pocket/Services/Cleaner/CleanerSupport.swift
+        Sources/Pocket/Services/Cleaner/CleanerPolicy.swift
+        Sources/Pocket/Services/Cleaner/CleanerSchedule.swift
+        Sources/Pocket/Services/Uninstall/UninstallerSupport.swift
+        Sources/Pocket/Services/ManagedDownloads/WhatsAppDownloadSupport.swift
+        Sources/Pocket/Core/SecureInputSupport.swift
         Tests/*.swift
         build/generated-tests/*.swift
     )
@@ -582,7 +582,7 @@ if (( TEST )); then
     write_swift_output_file_map "$TEST_OUTPUT_FILE_MAP" "$TEST_OBJECT_DIR" "${TEST_SOURCES[@]}"
     echo "▸ Building & running tests against $(basename "$SDK")…"
     swiftc -Onone -incremental -enable-batch-mode -j "$(sysctl -n hw.logicalcpu)" \
-        -module-name VorssaintTests -output-file-map "$TEST_OUTPUT_FILE_MAP" \
+        -module-name PocketTests -output-file-map "$TEST_OUTPUT_FILE_MAP" \
         -target "$TARGET" -sdk "$SDK" "${SDK_COMPAT_FLAGS[@]}" \
         "${VM_STATISTICS_COMPAT_FLAGS[@]}" "${TEST_SOURCES[@]}" -o build/metrics-tests
     test_status=0
@@ -597,7 +597,7 @@ if (( TEST )); then
 fi
 
 echo "▸ Compiling ($BUILD_CONFIGURATION) against $(basename "$SDK")…"
-APP_SOURCES=(Sources/Vorssaint/**/*.swift)
+APP_SOURCES=(Sources/Pocket/**/*.swift)
 if (( ! DEV )); then
     # A release starts from an empty build directory, so nothing an earlier
     # build left behind (an old icon catalog, a staged bundle) can reach it.
@@ -621,23 +621,23 @@ swiftc "${APP_OPTIMIZATION_FLAGS[@]}" -incremental -enable-batch-mode -j "$(sysc
 
 echo "▸ Compiling protected fan helper…"
 swiftc -O -target "$TARGET" -sdk "$SDK" "${SDK_COMPAT_FLAGS[@]}" "${BUILD_VARIANT_FLAGS[@]}" \
-    Sources/Vorssaint/Services/FanControl/FanControlSupport.swift \
-    Sources/Vorssaint/Services/FanControl/FanControlXPC.swift \
-    Sources/Vorssaint/Services/SystemMonitor/SMCClient.swift \
-    Sources/Vorssaint/Services/Metrics/TemperatureSensorSelector.swift \
-    Sources/Vorssaint/Services/FanControl/FanControlHardware.swift \
+    Sources/Pocket/Services/FanControl/FanControlSupport.swift \
+    Sources/Pocket/Services/FanControl/FanControlXPC.swift \
+    Sources/Pocket/Services/SystemMonitor/SMCClient.swift \
+    Sources/Pocket/Services/Metrics/TemperatureSensorSelector.swift \
+    Sources/Pocket/Services/FanControl/FanControlHardware.swift \
     Sources/FanControlHelper/main.swift \
     -o "build/$FAN_HELPER_ID"
 "build/$FAN_HELPER_ID" --selftest
 
 echo "▸ Compiling Now Playing adapter…"
 swiftc -O -target "$TARGET" -sdk "$SDK" "${SDK_COMPAT_FLAGS[@]}" -emit-library \
-    -module-name VorssaintNowPlaying \
+    -module-name PocketNowPlaying \
     Sources/NowPlayingAdapter/NowPlayingAdapter.swift \
     Sources/NowPlayingAdapter/NowPlayingQueue.swift \
     Sources/NowPlayingAdapter/NowPlayingSelection.swift \
-    Sources/Vorssaint/Services/Notch/NotchPlaybackSource.swift \
-    Sources/Vorssaint/Services/Notch/NotchPlaybackCommand.swift \
+    Sources/Pocket/Services/Notch/NotchPlaybackSource.swift \
+    Sources/Pocket/Services/Notch/NotchPlaybackCommand.swift \
     -o "build/$NOW_PLAYING_ADAPTER"
 
 echo "▸ Generating app icon…"
@@ -683,7 +683,7 @@ mkdir -p "$STAGE/Contents/Frameworks"
 cp "build/$NOW_PLAYING_ADAPTER" "$STAGE/Contents/Frameworks/$NOW_PLAYING_ADAPTER"
 cp Resources/now-playing.pl "$STAGE/Contents/Resources/now-playing.pl"
 cp Resources/agent-prices.json "$STAGE/Contents/Resources/agent-prices.json"
-cp Resources/com.vorssaint.utils.fan-control.plist \
+cp Resources/com.byaydenrx.pocket.fan-control.plist \
     "$STAGE/Contents/Library/LaunchDaemons/$FAN_HELPER_ID.plist"
 cp Resources/Info.plist "$STAGE/Contents/Info.plist"
 cp CHANGELOG.md "$STAGE/Contents/Resources/CHANGELOG.md"
@@ -700,14 +700,14 @@ if (( DEV )); then
     FAN_PLIST="$STAGE/Contents/Library/LaunchDaemons/$FAN_HELPER_ID.plist"
     /usr/libexec/PlistBuddy -c "Set :Label $FAN_HELPER_ID" "$FAN_PLIST"
     /usr/libexec/PlistBuddy -c "Set :BundleProgram Contents/Library/LaunchServices/$FAN_HELPER_ID" "$FAN_PLIST"
-    /usr/libexec/PlistBuddy -c "Delete :MachServices:com.vorssaint.utils.fan-control" "$FAN_PLIST"
+    /usr/libexec/PlistBuddy -c "Delete :MachServices:com.byaydenrx.pocket.fan-control" "$FAN_PLIST"
     /usr/libexec/PlistBuddy -c "Add :MachServices:$FAN_HELPER_ID bool true" "$FAN_PLIST"
     # Stamp the source commit + build time so the running dev app shows (in About)
     # exactly which code it was compiled from. Lets you verify it matches HEAD before
     # testing, instead of unknowingly running a stale build. Dev-only; never shipped.
     SHA="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
     [[ -n "$(git status --porcelain 2>/dev/null)" ]] && SHA="$SHA-dirty"
-    /usr/libexec/PlistBuddy -c "Add :VorssaintBuildCommit string '$SHA · $(date '+%Y-%m-%d %H:%M')'" "$STAGE/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Add :PocketBuildCommit string '$SHA · $(date '+%Y-%m-%d %H:%M')'" "$STAGE/Contents/Info.plist"
     echo "  stamped dev build: $SHA"
 fi
 FAN_HELPER_VERSION="$(
@@ -718,7 +718,7 @@ FAN_HELPER_VERSION="$(
         | /usr/bin/awk '{print $1}' | /usr/bin/shasum -a 256 \
         | /usr/bin/awk '{print $1}'
 )"
-/usr/libexec/PlistBuddy -c "Add :VorssaintFanControlHelperVersion string '$FAN_HELPER_VERSION'" \
+/usr/libexec/PlistBuddy -c "Add :PocketFanControlHelperVersion string '$FAN_HELPER_VERSION'" \
     "$STAGE/Contents/Info.plist"
 printf 'APPL????' > "$STAGE/Contents/PkgInfo"
 cp build/AppIcon.icns "$STAGE/Contents/Resources/AppIcon.icns"
@@ -746,7 +746,7 @@ xattr -c -r "$STAGE" 2>/dev/null || true
 #      notarization), the app's entitlements and a secure timestamp. Gives a
 #      stable, team-based designated requirement, so permissions persist across
 #      updates AND Gatekeeper shows no "unverified developer" warning.
-#   2. "Vorssaint Utils Signing" — the legacy stable self-signed identity, kept
+#   2. "Pocket Utils Signing" — the legacy stable self-signed identity, kept
 #      as a fallback so contributors without a Developer ID still get a constant
 #      designated requirement across their local builds.
 #   3. Ad-hoc — fresh clone with no identity at all.
@@ -907,9 +907,9 @@ if (( INSTALL )); then
     echo "▸ Installing into /Applications…"
     stop_process "$EXECUTABLE"
     # Only an official install replaces the pre-rename official apps. The
-    # Developer variant must coexist with them just as it does with Vorssaint.
+    # Developer variant must coexist with them just as it does with Pocket.
     if (( ! DEV )); then
-        for legacy in "Vorss:Vorss" "Vorssaint Utils:VorssaintUtils"; do
+        for legacy in "Vorss:Vorss" "Pocket Utils:PocketUtils"; do
             name="${legacy%%:*}"; proc="${legacy##*:}"
             if [[ -d "/Applications/$name.app" ]]; then
                 stop_process "$proc"

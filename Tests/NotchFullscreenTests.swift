@@ -190,7 +190,7 @@ enum NotchFullscreenTests {
     /// Window lists recorded from GLFW full screen (Minecraft) and ordinary
     /// desktop windows on a 14-inch notched display.
     private static func appFullscreenWindowChecks(_ suite: TestSuite) {
-        typealias Real = VorssaintTests.NotchAppFullscreen
+        typealias Real = PocketTests.NotchAppFullscreen
         let built = CGRect(x: 0, y: 0, width: 1512, height: 982)
         let external = CGRect(x: 1512, y: 0, width: 1920, height: 1080)
         let displays: [CGDirectDisplayID: CGRect] = [1: built, 2: external]

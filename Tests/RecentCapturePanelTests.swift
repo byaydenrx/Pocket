@@ -59,7 +59,7 @@ enum RecentCapturePanelTests {
     }
 
     struct NSRunningApplication { let bundleIdentifier: String? }
-    enum Bundle { static let main = NSRunningApplication(bundleIdentifier: "com.vorssaint.tests.captures") }
+    enum Bundle { static let main = NSRunningApplication(bundleIdentifier: "com.byaydenrx.pocket.tests.captures") }
     enum AssistiveKeyboard { static let bundleID = "com.apple.accessibility.Keyboard" }
     enum NSWorkspace {
         static let shared = Workspace()

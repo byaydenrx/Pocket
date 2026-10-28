@@ -148,7 +148,7 @@ enum NotchNotificationTests {
         suite.expect(inbox.items.isEmpty && inbox.update([]).isEmpty,
                "clearing an empty inbox is harmless")
 
-        let domain = "com.vorssaint.tests.notch-notifications"
+        let domain = "com.byaydenrx.pocket.tests.notch-notifications"
         let defaults = UserDefaults(suiteName: domain)!
         defaults.removePersistentDomain(forName: domain)
         defer { defaults.removePersistentDomain(forName: domain) }

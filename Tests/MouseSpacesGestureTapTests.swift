@@ -54,7 +54,7 @@ enum MouseSpacesGestureTapTests {
     }
 
     static func run(_ suite: TestSuite) {
-        let name = "com.vorssaint.tests.mouse-spaces-tap.\(UUID().uuidString)"
+        let name = "com.byaydenrx.pocket.tests.mouse-spaces-tap.\(UUID().uuidString)"
         let defaults = Foundation.UserDefaults(suiteName: name)!
         StandardDefaults.standard = defaults
         defer {

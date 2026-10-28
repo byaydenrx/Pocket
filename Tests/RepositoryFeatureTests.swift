@@ -216,18 +216,18 @@ enum RepositoryFeatureTests {
         suite.expect(repository.emptyPaths.isEmpty,
                "no Swift source is empty: \(repository.emptyPaths)")
         let requiredSourcePaths = [
-            "Sources/Vorssaint/Services/CommandBar/CommandBarSupport.swift",
-            "Sources/Vorssaint/Services/Homebrew/HomebrewManager.swift",
-            "Sources/Vorssaint/Services/Metrics/DiskSampler.swift",
-            "Sources/Vorssaint/Services/QuickTools/RecentCaptureService.swift",
-            "Sources/Vorssaint/Services/QuickTools/RecentCaptureStore.swift",
-            "Sources/Vorssaint/Services/SelfUninstall.swift",
-            "Sources/Vorssaint/Services/Shelf/ShelfService.swift",
-            "Sources/Vorssaint/Services/URLCleanerService.swift",
-            "Sources/Vorssaint/Support/Uninstaller.swift",
-            "Sources/Vorssaint/UI/MenuPanel/PanelURLCleanerView.swift",
-            "Sources/Vorssaint/UI/Settings/URLCleanerSettings.swift",
-            "Sources/Vorssaint/UI/Theme.swift",
+            "Sources/Pocket/Services/CommandBar/CommandBarSupport.swift",
+            "Sources/Pocket/Services/Homebrew/HomebrewManager.swift",
+            "Sources/Pocket/Services/Metrics/DiskSampler.swift",
+            "Sources/Pocket/Services/QuickTools/RecentCaptureService.swift",
+            "Sources/Pocket/Services/QuickTools/RecentCaptureStore.swift",
+            "Sources/Pocket/Services/SelfUninstall.swift",
+            "Sources/Pocket/Services/Shelf/ShelfService.swift",
+            "Sources/Pocket/Services/URLCleanerService.swift",
+            "Sources/Pocket/Support/Uninstaller.swift",
+            "Sources/Pocket/UI/MenuPanel/PanelURLCleanerView.swift",
+            "Sources/Pocket/UI/Settings/URLCleanerSettings.swift",
+            "Sources/Pocket/UI/Theme.swift",
         ]
         let missingSourcePaths = requiredSourcePaths.filter {
             repository.swiftSources[$0] == nil
@@ -266,7 +266,7 @@ enum RepositoryFeatureTests {
         // travel as `prompt:` and the label has to be hidden for a field to
         // own its whole row.
         let urlCleanerSettingsSource = repository.source(
-            at: "Sources/Vorssaint/UI/Settings/URLCleanerSettings.swift")
+            at: "Sources/Pocket/UI/Settings/URLCleanerSettings.swift")
         suite.expect(!urlCleanerSettingsSource.contains("TextField(l10n.s."),
                "no Clean URL field spends its row on a label instead of the field")
         suite.expect(urlCleanerSettingsSource.components(separatedBy: "TextField(").count
@@ -300,12 +300,12 @@ enum RepositoryFeatureTests {
                 lines[start...].prefix { $0 != "    }" }.joined(separator: "\n")
             } ?? ""
         }
-        let storedRules = memberText(repository.lines(at: "Sources/Vorssaint/Services/URLCleanerService.swift"),
+        let storedRules = memberText(repository.lines(at: "Sources/Pocket/Services/URLCleanerService.swift"),
                                      "    private static var rules: URLCleaning.Rules {")
         let ruleKeys = storedRules.components(separatedBy: "DefaultsKey.").dropFirst()
             .map { rest in String(rest.prefix { $0.isLetter || $0.isNumber }) }
-        for (surface, path) in [("Settings", "Sources/Vorssaint/UI/Settings/URLCleanerSettings.swift"),
-                                ("menu panel", "Sources/Vorssaint/UI/MenuPanel/PanelURLCleanerView.swift")] {
+        for (surface, path) in [("Settings", "Sources/Pocket/UI/Settings/URLCleanerSettings.swift"),
+                                ("menu panel", "Sources/Pocket/UI/MenuPanel/PanelURLCleanerView.swift")] {
             let lines = repository.lines(at: path)
             let reads = memberText(lines, "    private var result:") + "\n" + memberText(lines, "    private var rules:")
             let unobserved = ruleKeys.filter { key in
@@ -738,7 +738,7 @@ enum RepositoryFeatureTests {
         // MARK: Homebrew command building and parsing
 
         let homebrewManagerSource = repository.source(
-            at: "Sources/Vorssaint/Services/Homebrew/HomebrewManager.swift")
+            at: "Sources/Pocket/Services/Homebrew/HomebrewManager.swift")
         let homebrewRunStreaming = homebrewManagerSource.components(separatedBy: "func runStreaming(")
             .dropFirst().first?.components(separatedBy: "private func appendLog").first ?? ""
         suite.expect(homebrewRunStreaming.contains("brewSilenceTimeout")
@@ -842,7 +842,7 @@ enum RepositoryFeatureTests {
         // their own shell, leaving nothing behind (issue #598).
         do {
             let folder = FileManager.default.temporaryDirectory
-                .appendingPathComponent("vorssaint-terminal-script-\(UUID().uuidString)")
+                .appendingPathComponent("pocket-terminal-script-\(UUID().uuidString)")
             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: folder) }
             // A stand-in login shell that writes down the arguments it was given.
@@ -1015,12 +1015,12 @@ enum RepositoryFeatureTests {
                 && plainLogin.arguments.last == loginShell.arguments.last,
                "Homebrew's fallback asks for the same dump from a plain login shell")
         let resolvingEnvironment = HomebrewEnvironment.loginShellEnvironment(base: ["HOME": "/Users/test"])
-        suite.expect(HomebrewEnvironment.resolvingVariable == "VORSSAINT_RESOLVING_ENVIRONMENT"
-                && resolvingEnvironment == ["HOME": "/Users/test", "VORSSAINT_RESOLVING_ENVIRONMENT": "1"],
-               "Homebrew runs the login shell with VORSSAINT_RESOLVING_ENVIRONMENT=1 on top of the app's environment")
+        suite.expect(HomebrewEnvironment.resolvingVariable == "POCKET_RESOLVING_ENVIRONMENT"
+                && resolvingEnvironment == ["HOME": "/Users/test", "POCKET_RESOLVING_ENVIRONMENT": "1"],
+               "Homebrew runs the login shell with POCKET_RESOLVING_ENVIRONMENT=1 on top of the app's environment")
         // A real zsh reading startup files from a scratch ZDOTDIR, so the user's own are never touched.
         let zdotdir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vorssaint-login-shell-\(UUID().uuidString)")
+            .appendingPathComponent("pocket-login-shell-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: zdotdir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: zdotdir) }
         func startupExports(zshrc: String) -> [String: String] {
@@ -1032,12 +1032,12 @@ enum RepositoryFeatureTests {
                 baseEnvironment: ["HOME": zdotdir.path, "ZDOTDIR": zdotdir.path, "PATH": "/usr/bin:/bin"])
         }
         let zshrcExports = startupExports(zshrc: "export https_proxy=http://127.0.0.1:7890\n"
-                                          + "export HOMEBREW_SEEN_RESOLVING=$VORSSAINT_RESOLVING_ENVIRONMENT\n")
+                                          + "export HOMEBREW_SEEN_RESOLVING=$POCKET_RESOLVING_ENVIRONMENT\n")
         suite.expect(zshrcExports["HOMEBREW_API_DOMAIN"] == "https://mirror.example/api"
                 && zshrcExports["https_proxy"] == "http://127.0.0.1:7890",
                "Homebrew reads exports from both ~/.zprofile and ~/.zshrc, found \(zshrcExports.keys.sorted())")
         expectEqual(zshrcExports["HOMEBREW_SEEN_RESOLVING"] ?? "", "1",
-                    "Homebrew's login shell exposes VORSSAINT_RESOLVING_ENVIRONMENT to startup files")
+                    "Homebrew's login shell exposes POCKET_RESOLVING_ENVIRONMENT to startup files")
         // A multiplexer autostart that fails without a terminal and exits, or an exec into another shell.
         for takeover in ["multiplexer_autostart_failed_without_a_terminal=1; exit 0", "exec /bin/sh -c true"] {
             let fallbackExports = startupExports(zshrc: takeover + "\n")
@@ -1364,7 +1364,7 @@ enum RepositoryFeatureTests {
         // decoded inside the preview's body, so every frame of an opacity
         // drag re-read it from disk; it is loaded once per chosen file now,
         // which is what a task is for.
-        let uiPrefix = "Sources/Vorssaint/UI/"
+        let uiPrefix = "Sources/Pocket/UI/"
         let allUIFiles = repository.swiftPaths.filter { $0.hasPrefix(uiPrefix) }
         var decodingInBody: [String] = []
         for path in allUIFiles {
@@ -1420,7 +1420,7 @@ enum RepositoryFeatureTests {
         // the shared dispatch pool. Once unrelated work had taken every worker
         // in that pool, not one operation started and the wait never returned,
         // taking the whole app with it (issue #971).
-        let appPrefix = "Sources/Vorssaint/"
+        let appPrefix = "Sources/Pocket/"
         let appSources = repository.swiftPaths.filter {
             $0.hasPrefix(appPrefix) && !$0.contains(" 2")
         }
@@ -1565,8 +1565,8 @@ enum RepositoryFeatureTests {
         let localizationSourcePaths = repository.swiftPaths.filter { path in
             let folder = (path as NSString).deletingLastPathComponent
             let name = (path as NSString).lastPathComponent
-            return (folder == "Sources/Vorssaint/Core"
-                    || folder == "Sources/Vorssaint/Core/Localizations")
+            return (folder == "Sources/Pocket/Core"
+                    || folder == "Sources/Pocket/Core/Localizations")
                 && (name.hasSuffix("Strings.swift") || name.hasPrefix("Strings+")
                     || name == "Localization.swift")
         }
@@ -1597,8 +1597,8 @@ enum RepositoryFeatureTests {
             return lines[start..<end]
         }
         let frenchSources = repository.swiftPaths.filter { path in
-            path == "Sources/Vorssaint/Core/Localizations/Strings+French.swift"
-                || ((path as NSString).deletingLastPathComponent == "Sources/Vorssaint/Core"
+            path == "Sources/Pocket/Core/Localizations/Strings+French.swift"
+                || ((path as NSString).deletingLastPathComponent == "Sources/Pocket/Core"
                     && path.hasSuffix("Strings.swift"))
         }
         var breakingFrench: [String] = []
@@ -1617,7 +1617,7 @@ enum RepositoryFeatureTests {
         suite.expect(breakingFrench.isEmpty,
                "French keeps its punctuation on the line it belongs to (\(Set(breakingFrench).sorted().prefix(4).joined(separator: ", ")))")
 
-        let themeSource = repository.source(at: "Sources/Vorssaint/UI/Theme.swift")
+        let themeSource = repository.source(at: "Sources/Pocket/UI/Theme.swift")
         let raisedReads = themeSource
             .components(separatedBy: "accessibilityDisplayShouldIncreaseContrast").count - 1
         suite.expect(raisedReads == 2,
@@ -1643,7 +1643,7 @@ enum RepositoryFeatureTests {
 
         // Purgeable space is queried only for writable volumes.
         let samplerCode = repository.lines(
-            at: "Sources/Vorssaint/Services/Metrics/DiskSampler.swift")
+            at: "Sources/Pocket/Services/Metrics/DiskSampler.swift")
             .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
             .joined(separator: "\n")
         suite.expect(!samplerCode.isEmpty, "the disk sampler reads back for its shape check")
@@ -1790,9 +1790,9 @@ enum RepositoryFeatureTests {
         let ownershipGuards = ["isShelfOwnedFile", "discardablePaths", "ownedPayloadURLs",
                                "isRegularFile", "tempDir", "legacyDir", "root", "uuidString",
                                "storeRoot", "contentsOfDirectory"]
-        for path in ["Sources/Vorssaint/Services/Shelf/ShelfService.swift",
-                     "Sources/Vorssaint/Services/QuickTools/RecentCaptureService.swift",
-                     "Sources/Vorssaint/Services/QuickTools/RecentCaptureStore.swift"] {
+        for path in ["Sources/Pocket/Services/Shelf/ShelfService.swift",
+                     "Sources/Pocket/Services/QuickTools/RecentCaptureService.swift",
+                     "Sources/Pocket/Services/QuickTools/RecentCaptureStore.swift"] {
             let lines = repository.lines(at: path)
             suite.expect(!lines.isEmpty, "the store source reads back for its deletion check")
             for (index, line) in lines.enumerated() where line.contains("removeItem(at:") {
@@ -1901,7 +1901,7 @@ enum RepositoryFeatureTests {
 
         // MARK: Uninstallation paths stay aligned across SelfUninstall and Tools/uninstall.sh
         let selfUninstallSource = repository.source(
-            at: "Sources/Vorssaint/Services/SelfUninstall.swift")
+            at: "Sources/Pocket/Services/SelfUninstall.swift")
         let uninstallScriptSource = (try? String(contentsOfFile: "Tools/uninstall.sh",
                                                 encoding: .utf8)) ?? ""
         suite.expect(!selfUninstallSource.isEmpty && !uninstallScriptSource.isEmpty,
@@ -1909,9 +1909,9 @@ enum RepositoryFeatureTests {
         suite.expect(selfUninstallSource.contains("CleaningModeManager.shared.deactivateForSystemTeardown()"),
                "permission reset removes the cleaning input tap synchronously")
         let queryHabitSupportSource = repository.source(
-            at: "Sources/Vorssaint/Services/CommandBar/CommandBarSupport.swift")
+            at: "Sources/Pocket/Services/CommandBar/CommandBarSupport.swift")
         let queryHabitServiceSource = repository.source(
-            at: "Sources/Vorssaint/Services/CommandBar/CommandBarService.swift")
+            at: "Sources/Pocket/Services/CommandBar/CommandBarService.swift")
         suite.expect(!queryHabitSupportSource.isEmpty
                 && !queryHabitServiceSource.isEmpty
                 && !queryHabitSupportSource.contains("SecItem")
@@ -1935,7 +1935,7 @@ enum RepositoryFeatureTests {
                 .filter { $0.hasPrefix("/etc/sudoers.d/") })
         }
         let appRuleFiles = sudoersRuleFiles(
-            repository.source(at: "Sources/Vorssaint/Services/ShellSupport.swift"))
+            repository.source(at: "Sources/Pocket/Services/ShellSupport.swift"))
         let scriptRuleFiles = sudoersRuleFiles(uninstallScriptSource.components(separatedBy: "\n")
             .first { $0.hasPrefix("RULES=(") } ?? "")
         suite.expect(!appRuleFiles.isEmpty && scriptRuleFiles == appRuleFiles,
@@ -1946,7 +1946,7 @@ enum RepositoryFeatureTests {
         // reads the setting, so nothing repairs it afterwards — a reinstall
         // included.
         let uninstallerSource = repository.source(
-            at: "Sources/Vorssaint/Support/Uninstaller.swift")
+            at: "Sources/Pocket/Support/Uninstaller.swift")
         suite.expect(!uninstallerSource.isEmpty,
                "uninstaller entry point reads back for the sleep restore check")
         suite.expect(!selfUninstallSource.contains("_ = Sudoers.pmsetDisableSleep")
@@ -1975,7 +1975,7 @@ enum RepositoryFeatureTests {
                 && !uninstallScriptSource.contains("killall"),
                "script uninstall reads Space rearranging back for itself and never changes it")
         let brightnessSource = repository.source(
-            at: "Sources/Vorssaint/Services/Display/BrightnessService.swift")
+            at: "Sources/Pocket/Services/Display/BrightnessService.swift")
         let brightnessTapMethod = brightnessSource
             .components(separatedBy: "    func suspendInputTaps()").dropFirst().first?
             .components(separatedBy: "    private func installFunctionKeyTap").first ?? ""
@@ -1993,7 +1993,7 @@ enum RepositoryFeatureTests {
                 && !brightnessTapCode.contains("restoreAllGamma"),
                "the permission teardown stops every persistent keyboard tap")
         let quitProtectionSource = repository.source(
-            at: "Sources/Vorssaint/Services/QuitProtection/QuitProtectionService.swift")
+            at: "Sources/Pocket/Services/QuitProtection/QuitProtectionService.swift")
         suite.expect(quitProtectionSource.contains("func suspend()"),
                "quit protection exposes the teardown the permission reset calls")
 
@@ -2001,7 +2001,7 @@ enum RepositoryFeatureTests {
 
         // The session records the app that was active when secure input
         // turned on, not the process holding it, and Settings makes
-        // Vorssaint that app.
+        // Pocket that app.
         let secureInputOwnPid: pid_t = 77
         suite.expect(SecureInputSupport.holder(isEnabled: false,
                                          read: .noHolder,
@@ -2074,42 +2074,42 @@ enum RepositoryFeatureTests {
         suite.expect(SecureInputSupport.holder(isEnabled: true,
                                          read: .holder(secureInputOwnPid),
                                          ownPid: secureInputOwnPid,
-                                         runningApp: { pid in ("Vorssaint", pid) },
+                                         runningApp: { pid in ("Pocket", pid) },
                                          isProcessAlive: { _ in
                                              secureInputOwnLivenessChecks += 1
                                              return true
                                          }) == .unknown,
-               "Vorssaint recorded as the active app is never named as holding secure input")
+               "Pocket recorded as the active app is never named as holding secure input")
         suite.expect(secureInputOwnLivenessChecks == 0,
-               "naming Vorssaint is refused before any liveness check")
+               "naming Pocket is refused before any liveness check")
         suite.expect(SecureInputSupport.holder(isEnabled: true,
                                          read: .holder(5555),
                                          ownPid: secureInputOwnPid,
-                                         runningApp: { _ in ("Vorssaint", secureInputOwnPid) },
+                                         runningApp: { _ in ("Pocket", secureInputOwnPid) },
                                          isProcessAlive: { _ in true }) == .unknown,
-               "a recorded helper owned by Vorssaint is not named either")
+               "a recorded helper owned by Pocket is not named either")
         suite.expect(SecureInputSupport.holder(isEnabled: true,
                                          read: .holder(secureInputOwnPid),
                                          ownPid: secureInputOwnPid,
                                          runningApp: { _ in nil },
                                          isProcessAlive: { _ in true }) == .unknown,
-               "Vorssaint recorded while it is not a regular app is never sent to log out")
+               "Pocket recorded while it is not a regular app is never sent to log out")
         suite.expect(SecureInputSupport.holder(isEnabled: true,
                                          read: .holder(4242),
                                          ownPid: secureInputOwnPid,
-                                         runningApp: { pid in ("Vorssaint", pid) },
+                                         runningApp: { pid in ("Pocket", pid) },
                                          isProcessAlive: { _ in true })
-                   == .app(name: "Vorssaint", pid: 4242),
+                   == .app(name: "Pocket", pid: 4242),
                "another copy of the app is told apart from this one by pid, not by name")
         // The rule above protects the row only if the monitor passes this
         // process, and the harness does not compile `SecureInputMonitor`.
         let secureInputMonitorCode = ((try? String(
-            contentsOfFile: "Sources/Vorssaint/Core/SecureInputMonitor.swift", encoding: .utf8)) ?? "")
+            contentsOfFile: "Sources/Pocket/Core/SecureInputMonitor.swift", encoding: .utf8)) ?? "")
             .components(separatedBy: "\n")
             .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
             .joined(separator: "\n")
         suite.expect(secureInputMonitorCode.contains("ownPid: getpid(),"),
-               "the secure input monitor passes its own pid, so the row never names Vorssaint")
+               "the secure input monitor passes its own pid, so the row never names Pocket")
 
         var secureInputUnavailableLookups = 0
         var secureInputUnavailableLivenessChecks = 0

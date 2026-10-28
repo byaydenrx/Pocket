@@ -21,7 +21,7 @@ enum ClipboardFeatureTests {
         }
         typealias NSScreen = Screen
         enum UserDefaults {
-            static let name = "com.vorssaint.tests.clipboard-panel"
+            static let name = "com.byaydenrx.pocket.tests.clipboard-panel"
             static let standard = Foundation.UserDefaults(suiteName: name)!
         }
         var quickLayout = ClipboardHistoryLayout.cards
@@ -67,7 +67,7 @@ enum ClipboardFeatureTests {
         var candidates: Set<String> = []
         var lookup: Set<String> = []
         var historyPanelWasKey = false
-        let ownBundleID: String? = "com.vorssaint.utils"
+        let ownBundleID: String? = "com.byaydenrx.pocket"
         static var front: String?
         static func frontmostBundleID() -> String? { front }
     }
@@ -121,8 +121,8 @@ enum ClipboardFeatureTests {
                      "a copy naming an app that is not skipped is still recorded under that app")
         source.lookup = []
         source.candidates = ["com.apple.Safari"]
-        suite.expect(sourceCheck(declared: "com.vorssaint.utils").bundleID == nil,
-                     "text Vorssaint copies itself, such as recognized text, is not credited to the app in front")
+        suite.expect(sourceCheck(declared: "com.byaydenrx.pocket").bundleID == nil,
+                     "text Pocket copies itself, such as recognized text, is not credited to the app in front")
         source.candidates = ["com.apple.Safari"]
         suite.expect(sourceCheck(declared: "com.apple.Notes").bundleID == "com.apple.Notes",
                      "an app that names itself on the pasteboard is believed over the app in front")
@@ -670,8 +670,8 @@ enum ClipboardFeatureTests {
         suite.expect(Defaults.registeredDefaults[DefaultsKey.clipboardHistoryLayout] as? String
                         == ClipboardHistoryLayout.list.rawValue,
                "the clipboard history opens as the list until the cards are chosen")
-        let layoutDefaults = UserDefaults(suiteName: "com.vorssaint.tests.clipboard-layout")!
-        layoutDefaults.removePersistentDomain(forName: "com.vorssaint.tests.clipboard-layout")
+        let layoutDefaults = UserDefaults(suiteName: "com.byaydenrx.pocket.tests.clipboard-layout")!
+        layoutDefaults.removePersistentDomain(forName: "com.byaydenrx.pocket.tests.clipboard-layout")
         suite.expect(ClipboardHistoryLayout.current(in: layoutDefaults) == .list,
                "an unset clipboard history layout reads as the list")
         layoutDefaults.set(ClipboardHistoryLayout.cards.rawValue, forKey: DefaultsKey.clipboardHistoryLayout)
@@ -680,7 +680,7 @@ enum ClipboardFeatureTests {
         layoutDefaults.set("grid", forKey: DefaultsKey.clipboardHistoryLayout)
         suite.expect(ClipboardHistoryLayout.current(in: layoutDefaults) == .list,
                "a layout this version does not know reads as the list")
-        layoutDefaults.removePersistentDomain(forName: "com.vorssaint.tests.clipboard-layout")
+        layoutDefaults.removePersistentDomain(forName: "com.byaydenrx.pocket.tests.clipboard-layout")
         suite.expect(ClipboardHistoryLayout.cards.sideArrowsMoveSelection
                         && !ClipboardHistoryLayout.list.sideArrowsMoveSelection,
                "side arrows walk the cards, while the list leaves them to the search field")
@@ -1523,7 +1523,7 @@ enum ClipboardFeatureTests {
         ClipboardHistoryImageEditorTests.run(suite)
         ClipboardHistoryAccessTests.run(suite)
 
-        let pasteboardAccess = GeneralPasteboardAccess(label: "Vorssaint.Tests.PasteboardAccess")
+        let pasteboardAccess = GeneralPasteboardAccess(label: "Pocket.Tests.PasteboardAccess")
         let pasteboardGroup = DispatchGroup()
         let pasteboardStateLock = NSLock()
         var activePasteboardOperations = 0
@@ -1581,14 +1581,14 @@ enum ClipboardFeatureTests {
         suite.expect(laneAnswer == 887, "the queued work runs once the lane comes free")
         suite.expect(laneAnsweredOnMain, "the pasteboard lane answers on the main queue")
         let pastePlainSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/QuickTools/PastePlainService.swift",
+            contentsOfFile: "Sources/Pocket/Services/QuickTools/PastePlainService.swift",
             encoding: .utf8)) ?? ""
         suite.expect(pastePlainSource.contains("GeneralPasteboardAccess.shared.async"),
                "paste as plain text reads the clipboard on the lane, not on the main thread")
         // Ordering out keeps a sheet attached, so a Clear unpinned question
         // left open would come back with its old count on the next opening.
         let historySource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/Clipboard/ClipboardHistoryService.swift",
+            contentsOfFile: "Sources/Pocket/Services/Clipboard/ClipboardHistoryService.swift",
             encoding: .utf8)) ?? ""
         let hideBody = historySource.components(separatedBy: "    func hideHistoryWindow() {").dropFirst().first?
             .components(separatedBy: "\n    }\n").first ?? ""
@@ -1601,7 +1601,7 @@ enum ClipboardFeatureTests {
                         < (hideBody.range(of: "orderOut")?.lowerBound ?? hideBody.startIndex),
                "the history window reads a copy made in it as its own before it leaves the screen")
         let panelClipboardSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/UI/MenuPanel/PanelClipboardView.swift",
+            contentsOfFile: "Sources/Pocket/UI/MenuPanel/PanelClipboardView.swift",
             encoding: .utf8)) ?? ""
         suite.expect(panelClipboardSource.contains("if inNotch { confirmClearAboveIsland(ids) } else { clearingIDs = ids }")
                      && panelClipboardSource.contains("NSAlert.confirmAboveIsland("),

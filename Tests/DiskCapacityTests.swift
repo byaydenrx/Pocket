@@ -66,7 +66,7 @@ enum DiskCapacityTests {
     }
 
     static func run(_ suite: TestSuite) {
-        let domain = "com.vorssaint.tests.disk-capacity"
+        let domain = "com.byaydenrx.pocket.tests.disk-capacity"
         let defaults = UserDefaults(suiteName: domain)!
         defaults.removePersistentDomain(forName: domain)
         defer {

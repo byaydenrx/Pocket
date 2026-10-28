@@ -46,7 +46,7 @@ enum NotchScreenRefreshContract {
         final class Workspace { var frontmostApplication: RunningApplication? }
     }
     enum Bundle {
-        static let main = RunningApplication(bundleIdentifier: "com.vorssaint.tests.notch")
+        static let main = RunningApplication(bundleIdentifier: "com.byaydenrx.pocket.tests.notch")
     }
     enum ClipboardHistoryService {
         static let shared = History()
@@ -500,7 +500,7 @@ enum NotchScreenRefreshContract {
         pointerFollowContracts(suite)
         relocationContracts(suite)
 
-        let source = (try? String(contentsOfFile: "Sources/Vorssaint/Services/Notch/NotchService.swift",
+        let source = (try? String(contentsOfFile: "Sources/Pocket/Services/Notch/NotchService.swift",
                                   encoding: .utf8)) ?? ""
         let code = source.components(separatedBy: "\n")
             .map { line in line.range(of: "//").map { String(line[..<$0.lowerBound]) } ?? line }

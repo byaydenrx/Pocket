@@ -87,7 +87,7 @@ enum UpdateIntroFlowTests {
     }
 
     static func run(_ suite: TestSuite) {
-        let domain = "com.vorssaint.tests.update-intros.\(UUID().uuidString)"
+        let domain = "com.byaydenrx.pocket.tests.update-intros.\(UUID().uuidString)"
         UserDefaults.standard = Foundation.UserDefaults(suiteName: domain)!
         defer {
             UserDefaults.standard.removePersistentDomain(forName: domain)
