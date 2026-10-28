@@ -249,8 +249,6 @@ struct EnergySettings: View {
                 }
                 .padding(.leading, settingsRowTextInset)
             }
-            Divider()
-            KeepAwakeIconPicker(iconValue: $keepAwakeActiveIcon, tintValue: $keepAwakeIconTint)
             if PowerSampler.hasInternalBattery {
                 Divider()
                 SettingsRow(symbol: "battery.25percent", title: l10n.s.batteryDisableBelow,

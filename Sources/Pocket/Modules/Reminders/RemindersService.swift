@@ -56,13 +56,9 @@ final class RemindersService: NSObject, ObservableObject, NSPopoverDelegate {
     @Published private(set) var reminders: [PocketReminder] = []
     @Published private(set) var lists: [(id: String, title: String, color: NSColor)] = []
     @Published private(set) var access: EKAuthorizationStatus = EKEventStore.authorizationStatus(for: .reminder)
-    @Published var filter: Filter = Filter(rawValue: UserDefaults.standard.string(forKey: RemindersService.filterKey) ?? "") ?? .today {
-        didSet { UserDefaults.standard.set(filter.rawValue, forKey: Self.filterKey); refresh() }
-    }
-    /// nil shows every list.
-    @Published var listID: String? = UserDefaults.standard.string(forKey: RemindersService.listKey) {
-        didSet { UserDefaults.standard.set(listID, forKey: Self.listKey); refresh() }
-    }
+    /// Pocket shows every list with all of its open reminders; no filters.
+    let filter: Filter = .all
+    let listID: String? = nil
 
     private var store: EKEventStore?
     private var changeObserver: NSObjectProtocol?

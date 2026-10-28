@@ -9,6 +9,17 @@ struct RemindersList: View {
     @State private var newText = ""
     var maxRows = 8
 
+    private struct Group { let id: String; let title: String; let color: NSColor; let items: [PocketReminder] }
+
+    /// Each list, by name, with its reminders in due order.
+    private var groups: [Group] {
+        let byList = Dictionary(grouping: service.reminders, by: \.listID)
+        return service.lists.compactMap { list in
+            guard let items = byList[list.id], !items.isEmpty else { return nil }
+            return Group(id: list.id, title: list.title, color: list.color, items: items)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if !service.hasAccess {
@@ -26,42 +37,28 @@ struct RemindersList: View {
                     .controlSize(.small)
                 }
             } else {
-                HStack(spacing: 6) {
-                    Picker("", selection: $service.filter) {
-                        ForEach(RemindersService.Filter.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    Menu {
-                        Button("All Lists") { service.listID = nil }
-                        Divider()
-                        ForEach(service.lists, id: \.id) { list in
-                            Button(list.title) { service.listID = list.id }
-                        }
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
-                    }
-                    .menuStyle(.borderlessButton)
-                    .fixedSize()
-                    .help(service.lists.first { $0.id == service.listID }?.title ?? "All Lists")
-                }
-
                 if service.reminders.isEmpty {
-                    Text(service.filter == .today ? "Nothing due today." : "No reminders.")
+                    Text("No reminders.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 8)
                 } else {
-                    VStack(spacing: 2) {
-                        ForEach(service.reminders.prefix(maxRows)) { item in
-                            RemindersRow(item: item)
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(groups, id: \.id) { group in
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Circle().fill(Color(nsColor: group.color)).frame(width: 8, height: 8)
+                                    Text(group.title).font(.system(size: 12, weight: .semibold))
+                                    Spacer()
+                                    Text("\(group.items.count)").font(.caption).foregroundStyle(.tertiary)
+                                }
+                                .padding(.horizontal, 6)
+                                ForEach(group.items) { item in
+                                    RemindersRow(item: item)
+                                }
+                            }
                         }
-                    }
-                    if service.reminders.count > maxRows {
-                        Button("\(service.reminders.count - maxRows) more in Reminders…") { service.openInReminders() }
-                            .buttonStyle(.link)
-                            .font(.caption)
                     }
                 }
 
@@ -117,9 +114,6 @@ struct RemindersRow: View {
                 HStack(spacing: 6) {
                     if let dueText {
                         Text(dueText).foregroundStyle(item.isOverdue ? Color.red : Color.secondary)
-                    }
-                    if service.listID == nil {
-                        Text(item.listTitle).foregroundStyle(.tertiary)
                     }
                 }
                 .font(.caption)

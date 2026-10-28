@@ -573,7 +573,7 @@ struct SettingsView: View {
             } else {
                 GeneralSettings()
             }
-        case .features: FeatureHubSettings()
+        case .features: PocketPermissionsPage()
         case .textSnippets: TextSnippetsSettings()
         case .notch: NotchSettings()
         case .notchMascot: NotchMascotSettings()

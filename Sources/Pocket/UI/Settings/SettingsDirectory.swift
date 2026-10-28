@@ -68,7 +68,7 @@ enum SettingsDirectory {
                                 .general, sectionAnchor: .panelConfiguration),
                             title: s.menuBarSection, icon: "menubar.rectangle"), at: 1)
                     }
-                    if pageItem.page == .shortcuts, isAvailable(.brightness),
+                    if false, pageItem.page == .shortcuts, isAvailable(.brightness),
                        BrightnessService.keyboardLightIsSupported {
                         let destination = FeatureSettingsDestination(
                             .shortcuts, sectionAnchor: .keyboardBrightnessShortcuts)
@@ -160,9 +160,7 @@ enum SettingsDirectory {
                 .general, sectionAnchor: .panelConfiguration),
             title: s.menuBarSection, icon: "menubar.rectangle",
             keywords: [s.showMenuBarIcon, FeatureStrings.generalSettings(language).menuBarIconTitle, "SF Symbols"]))
-        if BrightnessService.keyboardLightIsSupported {
-            items.append(SettingsSearchSupport.keyboardBrightnessShortcutItem(language: language))
-        }
+
         return items
     }
 
@@ -183,8 +181,8 @@ enum SettingsDirectory {
                                        ]),
                 // Searching any feature name lands here even when the feature
                 // is hidden, so the hub is always the way back.
-                SettingsDirectoryItem(page: .features, title: FeatureStrings.hub(language).pageTitle,
-                                       icon: "square.grid.2x2",
+                SettingsDirectoryItem(page: .features, title: "Permissions",
+                                       icon: "lock.shield",
                                        featureKeywords: AppFeature.allCases.map {
                                         ($0, [$0.hubTitle(s, hub: FeatureStrings.hub(language), language: language)])
                                        }),
@@ -452,8 +450,6 @@ enum SettingsDirectory {
                 SettingsDirectoryItem(page: .shortcuts, title: s.shortcutsPageTitle, icon: "command",
                                       keywords: [s.hotkeyToggle]),
                 SettingsDirectoryItem(page: .advanced, title: s.tabAdvanced, icon: "wrench.and.screwdriver"),
-                SettingsDirectoryItem(page: .about, title: s.tabAbout, icon: "info.circle",
-                                      keywords: [s.reviewIntro, s.reviewHighlights]),
                 SettingsDirectoryItem(page: .releaseNotes, title: s.tabReleaseNotes, icon: "sparkles"),
             ]),
         ]

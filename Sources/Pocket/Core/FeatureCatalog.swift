@@ -39,6 +39,20 @@ enum AppFeature: String, CaseIterable {
     case menuBarTimer, downloads, dockNowPlaying, reminders, storageAnalyzer
 }
 
+
+/// Pocket keeps every upstream case so the exhaustive switches still merge
+/// cleanly, but features it dropped never appear anywhere: they are left out
+/// of `allCases` (every list, hub and runtime loop) and never report available.
+extension AppFeature {
+    static let removedInPocket: Set<AppFeature> = [
+        .windowLayout, .mouseAcceleration, .notch, .notchCalendar, .notchNotifications, .notchGestures, .notchTimer, .notchAccessories, .notchLyrics, .notchQueue, .notchLiveEqualizer, .notchDownloads, .notchAgents, .notchWatch, .notchMascot,
+    ]
+
+    static var allCases: [AppFeature] {
+        [.switcher, .dockPreview, .dockClick, .windowMaximizer, .autoQuit, .spacesOrder, .scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseNavigation, .mouseButtonShortcuts, .middleClick, .mouseClickDebounce, .keyboardDebounce, .textSnippets, .superKey, .quitWindowProtection, .clipboardHistory, .pastePlain, .finderCutPaste, .finderRename, .shelf, .urlCleaner, .diskImageInstaller, .mixer, .soundOutputSwitcher, .audioPriority, .micMute, .musicBlock, .keepAwake, .brightness, .extraBrightness, .bluetoothSleep, .quickLauncher, .quickToggles, .colorPicker, .screenOCR, .cleaningMode, .mediaTools, .cleaner, .uninstaller, .homebrew, .appUpdates, .screenshot, .cameraPreview, .radialMenu, .scratchpad, .commandBar, .screenRecorder, .wallpaper, .killProcess, .portManager, .monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower, .connectedDevices, .fanControl, .menuBarTimer, .downloads, .dockNowPlaying, .reminders, .storageAnalyzer]
+    }
+}
+
 /// Hub sections, in display order.
 enum FeatureGroup: String, CaseIterable {
     case windowsDock, mouseKeyboard, clipboardFiles, sound, energyDisplay, tools, dynamicIsland, monitor
@@ -232,7 +246,7 @@ extension AppFeature {
     }
 
     func isAvailable(in defaults: UserDefaults) -> Bool {
-        defaults.bool(forKey: availabilityKey)
+        !Self.removedInPocket.contains(self) && defaults.bool(forKey: availabilityKey)
     }
 
     /// The feature's own enable keys; any one being true means the feature is
@@ -248,9 +262,7 @@ extension AppFeature {
         case .downloads, .storageAnalyzer: return []
         case .switcher: return [DefaultsKey.switcherEnabled]
         case .dockPreview: return [DefaultsKey.dockPreviewEnabled]
-        case .dockClick: return [DefaultsKey.dockClickMinimize,
-                                 DefaultsKey.dockClickHide,
-                                 DefaultsKey.dockClickCycleWindows]
+        case .dockClick: return [DefaultsKey.dockClickCycleWindows]
         case .windowMaximizer: return [DefaultsKey.windowMaximizeEnabled]
         case .autoQuit: return [DefaultsKey.autoQuitEnabled]
         case .spacesOrder: return [DefaultsKey.spacesOrderEnabled]

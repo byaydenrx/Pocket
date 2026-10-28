@@ -931,10 +931,11 @@ enum BlackHoleGlyph {
         return fixedSizeSymbol(named: name)
     }
 
+    /// Pocket: while awake the menu bar icon is the same mark, dimmed. No
+    /// separate icon or color to choose.
     static func image(active: Bool) -> NSImage? {
-        let tint = KeepAwakeIconTint.current
         guard active else { return mark() ?? fallback(active: false) }
-        return activeImage(style: .current, tint: tint)
+        return activeImage(style: .pocket, tint: .dimmed)
     }
 
     static func activeImage(style: KeepAwakeActiveIcon,

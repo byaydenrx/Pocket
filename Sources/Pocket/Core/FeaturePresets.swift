@@ -20,9 +20,10 @@ enum FeaturePreset: String, CaseIterable, Identifiable {
         guard !defaults.bool(forKey: DefaultsKey.hasOnboarded),
               defaults.integer(forKey: DefaultsKey.onboardingStep) == 0
         else { return }
-        let selected = FeaturePreset.essential.features
+        // Pocket has no install step: every feature is present and stays idle
+        // until its own switch is turned on.
         for feature in AppFeature.allCases {
-            defaults.set(selected.contains(feature), forKey: feature.availabilityKey)
+            defaults.set(true, forKey: feature.availabilityKey)
         }
     }
 

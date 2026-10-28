@@ -15,6 +15,12 @@ enum QuickToggleAction: String, PanelOrderItem, Identifiable {
 
     var id: String { rawValue }
 
+    /// Pocket drops the keyboard light, appearance and hidden-files toggles.
+    static var allCases: [QuickToggleAction] {
+        [.micMute, .emptyTrash, .ejectDisks, .desktopIcons, .lockScreen, .displayOff, .screenSaver,
+         .sleepNow, .dockAutohide, .clearClipboard, .restartFinder]
+    }
+
     var feature: AppFeature {
         self == .micMute ? .micMute : .quickToggles
     }

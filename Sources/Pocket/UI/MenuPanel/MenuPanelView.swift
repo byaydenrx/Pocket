@@ -1120,6 +1120,13 @@ private enum ControlPanelItem: String, PanelOrderItem, Identifiable {
 
     var id: String { rawValue }
 
+    /// Pocket keeps only window cycling for Dock clicks; minimize and hide are gone.
+    static var allCases: [ControlPanelItem] {
+        [.mouseScroll, .linearScroll, .focusFollowsMouse, .mouseNavigation, .switcher, .cutPaste, .autoQuit, .shelf,
+         .windowMaximize, .dockPreview, .keyDebounce, .dockClickCycle, .middleClick, .textSnippets, .radialMenu,
+         .mouseButtonShortcuts, .superKey, .mouseClickDebounce, .spacesOrder]
+    }
+
     /// The hub feature behind the toggle; off in the hub removes the row
     /// everywhere, including the edit and hidden lists.
     var feature: AppFeature {
@@ -2836,9 +2843,6 @@ struct KeepAwakeCard: View {
 
             if optionsExpanded {
                 VStack(alignment: .leading, spacing: 8) {
-                    KeepAwakeIconPicker(iconValue: $keepAwakeActiveIcon,
-                                        tintValue: $keepAwakeIconTint,
-                                        compact: true)
                     compactOptionToggle(
                         icon: "display",
                         title: displaySleepStrings.allowDisplaySleep,

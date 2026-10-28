@@ -152,23 +152,6 @@ struct DockSettings: View {
 
     private var dockClickCard: some View {
         SettingsCard(title: FeatureStrings.hub(l10n.language).titleDockClick) {
-            SettingsRow(symbol: "dock.arrow.down.rectangle", title: l10n.s.dockClickMinimize,
-                        caption: l10n.s.dockClickMinimizeCaption) {
-                Toggle(l10n.s.dockClickMinimize, isOn: $dockClickMinimize)
-                    .labelsHidden()
-                    .onChange(of: dockClickMinimize) { _, enabled in
-                        if enabled { dockClickHide = false }
-                        DockClickService.shared.syncWithPreferences()
-                    }
-            }
-            SettingsRow(symbol: "eye.slash", title: l10n.s.dockClickHide, caption: l10n.s.dockClickHideCaption) {
-                Toggle(l10n.s.dockClickHide, isOn: $dockClickHide)
-                    .labelsHidden()
-                    .onChange(of: dockClickHide) { _, enabled in
-                        if enabled { dockClickMinimize = false }
-                        DockClickService.shared.syncWithPreferences()
-                    }
-            }
             SettingsRow(symbol: "arrow.triangle.2.circlepath", title: l10n.s.dockClickCycleWindows,
                         caption: l10n.s.dockClickCycleWindowsCaption) {
                 Toggle(l10n.s.dockClickCycleWindows, isOn: $dockClickCycleWindows)

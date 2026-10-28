@@ -32,7 +32,6 @@ struct GeneralSettings: View {
                     shortcutCard
                 }
                 SettingsImportCard()
-                feedbackCard
             }
             .frame(maxWidth: 760)
             .frame(maxWidth: .infinity)
