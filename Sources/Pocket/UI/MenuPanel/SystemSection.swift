@@ -91,7 +91,7 @@ struct SystemSection: View {
 
     /// Card subsections, in order, filtered by the per-item toggles (and whether a
     /// battery exists). Drives divider interleaving so only rendered blocks get one.
-    private enum Block: String, PanelOrderItem { case temps, usage, memory, alerts, uptime, connectedDevices }
+    private enum Block: String, PanelOrderItem { case temps, usage, memory, network, alerts, uptime, connectedDevices }
 
     // Hub availability per metric family: an unavailable metric leaves the
     // card entirely, including the edit-mode hidden rows.
@@ -116,6 +116,7 @@ struct SystemSection: View {
         case .temps, .usage: return cpuAvailable || gpuAvailable
         case .memory: return memoryAvailable
         case .connectedDevices: return AppFeature.connectedDevices.isAvailable
+        case .network: return AppFeature.monitorNetwork.isAvailable
         case .alerts, .uptime: return true
         }
     }
@@ -143,6 +144,7 @@ struct SystemSection: View {
         case .alerts: return sysAlerts
         case .uptime: return sysUptime
         case .connectedDevices: return sysConnectedDevices
+        case .network: return sysNetwork
         }
     }
 
@@ -157,6 +159,7 @@ struct SystemSection: View {
         sysAlerts = true
         sysUptime = true
         sysConnectedDevices = true
+        sysNetwork = true
     }
 
     @ViewBuilder
@@ -168,6 +171,34 @@ struct SystemSection: View {
         case .alerts: alertRows(editing: editing)
         case .uptime: uptimeRow(editing: editing)
         case .connectedDevices: connectedDevicesRow(editing: editing)
+        case .network: networkRow(editing: editing)
+        }
+    }
+
+    @AppStorage("monitorSystemNetwork") private var sysNetwork = true
+
+    /// Live download and upload, so the System tab has the whole picture.
+    @ViewBuilder
+    private func networkRow(editing: Bool) -> some View {
+        if !sysNetwork {
+            PanelHiddenItemRow(title: "Network", systemImage: "network", isVisible: $sysNetwork)
+        } else {
+            HStack(spacing: 10) {
+                Image(systemName: "network")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+                Label(ByteCountFormatter.string(fromByteCount: Int64(monitor.snapshot.netDownBytesPerSec ?? 0), countStyle: .file) + "/s",
+                      systemImage: "arrow.down")
+                Label(ByteCountFormatter.string(fromByteCount: Int64(monitor.snapshot.netUpBytesPerSec ?? 0), countStyle: .file) + "/s",
+                      systemImage: "arrow.up")
+                Spacer()
+                if editing {
+                    PanelInlineHideButton(isVisible: $sysNetwork)
+                }
+            }
+            .labelStyle(.titleAndIcon)
+            .font(.system(size: 10.5, weight: .medium).monospacedDigit())
+            .foregroundStyle(.secondary)
         }
     }
 

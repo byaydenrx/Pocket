@@ -13,7 +13,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     case keepAwake, brightness, mixer, system, network, disk, power, fanControl, utilities, controls,
          toggles, wallpaper
     // Pocket additions
-    case reminders
+    case reminders, downloads
 
     var id: String { rawValue }
 
@@ -27,6 +27,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     func defaultTitle(_ s: Strings) -> String {
         switch self {
         case .reminders: return "Reminders"
+        case .downloads: return "Downloads"
         case .keepAwake: return s.keepAwakeTitle
         case .brightness: return FeatureStrings.brightness(L10n.shared.language).pageTitle
         case .mixer: return s.mixerSection
@@ -45,6 +46,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     var symbolName: String {
         switch self {
         case .reminders: return "checklist"
+        case .downloads: return "arrow.down.circle"
         case .keepAwake: return "moon.zzz.fill"
         case .brightness: return "display.2"
         case .mixer: return "speaker.wave.2"
@@ -66,6 +68,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     var visibilityKey: String {
         switch self {
         case .reminders: return DefaultsKey.remindersEnabled
+        case .downloads: return "panelShowDownloads"
         case .keepAwake: return DefaultsKey.panelShowKeepAwake
         case .brightness: return DefaultsKey.panelShowBrightness
         case .mixer: return DefaultsKey.monitorShowMixer
@@ -91,6 +94,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     var featureGate: [AppFeature] {
         switch self {
         case .reminders: return [.reminders]
+        case .downloads: return [.downloads]
         case .keepAwake: return [.keepAwake]
         case .brightness: return [.brightness]
         case .mixer: return [.mixer, .audioPriority]

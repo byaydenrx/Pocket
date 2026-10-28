@@ -494,6 +494,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         showPopover(anchor: button)
     }
 
+    /// Opens the menu panel if it is closed (modules route here).
+    func openMenuPanel() {
+        guard !popoverIsOpen else { return }
+        showPopover()
+    }
+
     private func toggleMainPopover() {
         if NotchSupport.routesAppPanel(), NotchService.shared.acceptsSystemFeedback {
             NotchService.shared.openAppPanel(toggle: true); return

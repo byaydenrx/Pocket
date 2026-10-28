@@ -69,6 +69,7 @@ struct PanelQuickTogglesView: View {
 struct QuickTogglesList: View {
     @ObservedObject private var l10n = L10n.shared
     @ObservedObject private var toggles = QuickTogglesService.shared
+    @StateObject private var names = PocketNamesObserver()
     @ObservedObject private var micMute = MicMuteService.shared
     @ObservedObject private var brightness = BrightnessService.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -172,12 +173,26 @@ struct QuickTogglesList: View {
 
     // MARK: - Rows
 
-    @ViewBuilder
     private func itemView(_ item: QuickToggleAction) -> some View {
+        baseItemView(item)
+            .contextMenu {
+                Button("Rename…") {
+                    PocketNames.promptRename(id: "toggle.\(item.rawValue)",
+                                             current: PocketNames.title("toggle.\(item.rawValue)", item.readableName),
+                                             fallback: item.readableName)
+                }
+                if PocketNames.custom("toggle.\(item.rawValue)") != nil {
+                    Button("Use Original Name") { PocketNames.set(nil, for: "toggle.\(item.rawValue)") }
+                }
+            }
+    }
+
+    @ViewBuilder
+    private func baseItemView(_ item: QuickToggleAction) -> some View {
         let strings = FeatureStrings.quickToggles(l10n.language)
         switch item {
         case .darkMode:
-            UtilityActionButton(title: colorScheme == .dark ? strings.darkModeToLight : strings.darkModeToDark,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", colorScheme == .dark ? strings.darkModeToLight : strings.darkModeToDark),
                                 caption: caption(for: item, idle: strings.darkModeCaption),
                                 systemImage: colorScheme == .dark ? "sun.max.fill" : "moon.fill",
                                 isEditing: editing,
@@ -200,7 +215,7 @@ struct QuickTogglesList: View {
                            showsDragHandle: true,
                            visibility: visibilityBinding(item))
         case .micMute:
-            UtilityActionButton(title: micMute.isMuted ? l10n.s.micUnmuteName : l10n.s.micMuteName,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", micMute.isMuted ? l10n.s.micUnmuteName : l10n.s.micMuteName),
                                 caption: l10n.s.micMuteCaption,
                                 systemImage: micMute.isMuted ? "mic.slash.fill" : "mic",
                                 isEditing: editing,
@@ -211,7 +226,7 @@ struct QuickTogglesList: View {
                                     MicMuteService.shared.toggle()
                                 })
         case .emptyTrash:
-            UtilityActionButton(title: strings.emptyTrashTitle,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", strings.emptyTrashTitle),
                                 caption: caption(for: item, idle: strings.emptyTrashCaption),
                                 systemImage: "trash",
                                 isEditing: editing,
@@ -230,7 +245,7 @@ struct QuickTogglesList: View {
             // Anything but the plain description is news: nothing to eject,
             // ejecting now, or a failure.
             let eject = ejectCaption(strings)
-            UtilityActionButton(title: strings.ejectTitle,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", strings.ejectTitle),
                                 caption: eject,
                                 systemImage: "eject.fill",
                                 isEditing: editing,
@@ -241,7 +256,7 @@ struct QuickTogglesList: View {
                                     QuickTogglesService.shared.ejectAllDisks()
                                 })
         case .hiddenFiles:
-            UtilityActionButton(title: toggles.hiddenFilesShown ? strings.hiddenFilesHide : strings.hiddenFilesShow,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", toggles.hiddenFilesShown ? strings.hiddenFilesHide : strings.hiddenFilesShow),
                                 caption: caption(for: item, idle: strings.finderRestartCaption),
                                 systemImage: toggles.hiddenFilesShown ? "eye.slash" : "eye",
                                 isEditing: editing,
@@ -252,7 +267,7 @@ struct QuickTogglesList: View {
                                     QuickTogglesService.shared.toggleHiddenFiles()
                                 })
         case .desktopIcons:
-            UtilityActionButton(title: toggles.desktopIconsShown ? strings.desktopIconsHide : strings.desktopIconsShow,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", toggles.desktopIconsShown ? strings.desktopIconsHide : strings.desktopIconsShow),
                                 caption: caption(for: item, idle: strings.finderRestartCaption),
                                 systemImage: "desktopcomputer",
                                 isEditing: editing,
@@ -263,7 +278,7 @@ struct QuickTogglesList: View {
                                     QuickTogglesService.shared.toggleDesktopIcons()
                                 })
         case .lockScreen:
-            UtilityActionButton(title: strings.lockScreenTitle,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", strings.lockScreenTitle),
                                 caption: strings.lockScreenCaption,
                                 systemImage: "lock.fill",
                                 isEditing: editing,
@@ -276,7 +291,7 @@ struct QuickTogglesList: View {
                                     }
                                 })
         case .displayOff:
-            UtilityActionButton(title: strings.displayOffTitle,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", strings.displayOffTitle),
                                 caption: caption(for: item, idle: strings.displayOffCaption),
                                 systemImage: "display",
                                 isEditing: editing,
@@ -290,7 +305,7 @@ struct QuickTogglesList: View {
                                     }
                                 })
         case .screenSaver:
-            UtilityActionButton(title: strings.screenSaverTitle,
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", strings.screenSaverTitle),
                                 caption: strings.screenSaverCaption,
                                 systemImage: "sparkles.tv",
                                 isEditing: editing,
@@ -303,7 +318,7 @@ struct QuickTogglesList: View {
                                     }
                                 })
         case .sleepNow:
-            UtilityActionButton(title: "Sleep Now",
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", "Sleep Now"),
                                 caption: caption(for: item, idle: "Put the Mac to sleep"),
                                 systemImage: "powersleep",
                                 isEditing: editing,
@@ -317,7 +332,7 @@ struct QuickTogglesList: View {
                                     }
                                 })
         case .dockAutohide:
-            UtilityActionButton(title: toggles.dockAutohides ? "Always Show Dock" : "Auto-Hide Dock",
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", toggles.dockAutohides ? "Always Show Dock" : "Auto-Hide Dock"),
                                 caption: caption(for: item, idle: "The Dock restarts to apply it"),
                                 systemImage: "dock.arrow.down.rectangle",
                                 isEditing: editing,
@@ -328,7 +343,7 @@ struct QuickTogglesList: View {
                                     QuickTogglesService.shared.toggleDockAutohide()
                                 })
         case .clearClipboard:
-            UtilityActionButton(title: "Clear Clipboard",
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", "Clear Clipboard"),
                                 caption: caption(for: item, idle: "Empty what is copied right now"),
                                 systemImage: "clipboard",
                                 isEditing: editing,
@@ -338,7 +353,7 @@ struct QuickTogglesList: View {
                                     QuickTogglesService.shared.clearClipboard()
                                 })
         case .restartFinder:
-            UtilityActionButton(title: "Restart Finder",
+            UtilityActionButton(title: PocketNames.title("toggle.\(item.rawValue)", "Restart Finder"),
                                 caption: caption(for: item, idle: "For a Finder that hangs or misbehaves"),
                                 systemImage: "arrow.clockwise",
                                 isEditing: editing,

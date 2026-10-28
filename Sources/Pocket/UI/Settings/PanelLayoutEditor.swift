@@ -121,6 +121,7 @@ private extension PanelSectionID {
     func description(_ text: GeneralSettingsStrings) -> String {
         switch self {
         case .reminders: return "Your Reminders lists: check off, add and see what is due."
+        case .downloads: return "Paste links, magnets or torrents and watch them download."
         case .keepAwake: return text.sectionKeepAwake
         case .brightness: return text.sectionDisplays
         case .mixer: return text.sectionMixer

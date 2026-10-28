@@ -150,7 +150,7 @@ struct MenuPanelView: View {
             return selectedMetric.monitorNeeds
         }
         switch activeSection {
-        case .system: return SystemMonitorPanelNeeds(system: true)
+        case .system: return SystemMonitorPanelNeeds(system: true, network: AppFeature.monitorNetwork.isAvailable)
         case .network: return SystemMonitorPanelNeeds(network: true)
         case .disk: return SystemMonitorPanelNeeds(disk: true)
         case .power: return SystemMonitorPanelNeeds(power: true, powerCard: true)
@@ -305,6 +305,7 @@ struct MenuPanelView: View {
         case .toggles: return 420
         case .wallpaper: return 480
         case .reminders: return 320
+        case .downloads: return 380
         }
     }
 
@@ -349,6 +350,7 @@ struct MenuPanelView: View {
         case .toggles: QuickTogglesSection(collapsible: collapsible)
         case .wallpaper: if showWallpaper { WallpaperSection(collapsible: collapsible) }
         case .reminders: RemindersSection(collapsible: collapsible)
+        case .downloads: DownloadsSection(collapsible: collapsible)
         }
     }
 

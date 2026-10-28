@@ -62,6 +62,8 @@ struct DLRootView: View {
 
 struct DLInputBar: View {
     @ObservedObject var store: DLStore
+    /// Room for a window's traffic lights; 12 inside the menu panel.
+    var leadingInset: CGFloat = 88
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -87,7 +89,7 @@ struct DLInputBar: View {
             .disabled(store.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !store.ready)
             .help("Download (Return)")
         }
-        .padding(.leading, 88) // beside the window buttons
+        .padding(.leading, leadingInset)
         .padding(.trailing, 12)
         .padding(.top, 10)
         .onAppear { DispatchQueue.main.async { focused = true } }
@@ -128,7 +130,7 @@ struct DLOptionsRow: View {
             .help(settings.folder.path)
 
             if settings.cookies != nil {
-                Label("DLCookies", systemImage: "checkmark.seal")
+                Label("Cookies", systemImage: "checkmark.seal")
                     .foregroundStyle(.secondary)
                     .help("Using \(settings.cookies!.path)")
             }
@@ -183,7 +185,7 @@ struct DLSettingsView: View {
                     }
                 }
                 GridRow {
-                    Text("DLCookies").foregroundStyle(.secondary)
+                    Text("Cookies").foregroundStyle(.secondary)
                     HStack(spacing: 6) {
                         if let cookies = settings.cookies {
                             Image(systemName: "doc.text").foregroundStyle(.secondary)
@@ -232,7 +234,7 @@ struct DLSettingsView: View {
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.plainText, .text, .data]
         panel.message = "Choose a cookies.txt file (Netscape format, as exported by a browser extension)"
-        panel.prompt = "Use DLCookies"
+        panel.prompt = "Use Cookies"
         if let cookies = settings.cookies { panel.directoryURL = cookies.deletingLastPathComponent() }
         if panel.runModal() == .OK, let url = panel.url { settings.cookies = url }
     }
@@ -439,5 +441,49 @@ enum DLFormat {
         if s < 3600 { return "\(s / 60)m \(s % 60)s left" }
         if s < 86400 { return "\(s / 3600)h \(s % 3600 / 60)m left" }
         return "\(s / 86400)d left"
+    }
+}
+
+
+/// Downloads as a menu panel tab: the link field, options and the list, no window.
+struct DownloadsSection: View {
+    var collapsible = true
+    @ObservedObject private var store = DownloadsService.shared.store
+    @ObservedObject private var settings = DownloadsService.shared.settings
+    @StateObject private var hover = DLHoverState()
+
+    var body: some View {
+        PanelSection(.downloads, title: PanelSectionID.downloads.title(L10n.shared.s), collapsible: collapsible) {
+            VStack(spacing: 0) {
+                DLInputBar(store: store, leadingInset: 0)
+                    .padding(.trailing, -12)
+                DLOptionsRow(store: store, settings: settings)
+                    .padding(.horizontal, -16)
+                if store.items.isEmpty {
+                    Text(store.ready ? "Paste a link above, or drop a link or .torrent here." : "Starting aria2…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, minHeight: 60)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(store.items) { item in
+                                DLRow(item: item, store: store, hover: hover)
+                                Divider().opacity(0.25)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 260)
+                }
+                DLFooter(store: store)
+                    .padding(.horizontal, -16)
+            }
+            .onDrop(of: [.fileURL, .url], isTargeted: nil) { providers in
+                DLRootView.load(providers) { store.drop($0) }
+                return true
+            }
+            .onAppear { DownloadsService.shared.panelAppeared() }
+            .onDisappear { DownloadsService.shared.panelDisappeared() }
+        }
     }
 }
