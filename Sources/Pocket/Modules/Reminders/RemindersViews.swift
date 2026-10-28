@@ -44,20 +44,11 @@ struct RemindersList: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 8)
                 } else {
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(groups, id: \.id) { group in
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(spacing: 6) {
-                                    Circle().fill(Color(nsColor: group.color)).frame(width: 8, height: 8)
-                                    Text(group.title).font(.system(size: 12, weight: .semibold))
-                                    Spacer()
-                                    Text("\(group.items.count)").font(.caption).foregroundStyle(.tertiary)
-                                }
-                                .padding(.horizontal, 6)
-                                ForEach(group.items) { item in
-                                    RemindersRow(item: item)
-                                }
-                            }
+                    // One list of every open reminder; each row's checkbox
+                    // carries its list's color.
+                    VStack(spacing: 2) {
+                        ForEach(service.reminders) { item in
+                            RemindersRow(item: item)
                         }
                     }
                 }
@@ -137,7 +128,7 @@ struct RemindersSection: View {
     var collapsible = true
 
     var body: some View {
-        PanelSection(.reminders, title: PanelLayout.customTitle(for: .reminders) ?? "", collapsible: collapsible) {
+        PanelSection(.reminders, title: PanelSectionID.reminders.title(L10n.shared.s), collapsible: collapsible) {
             RemindersList()
         }
     }

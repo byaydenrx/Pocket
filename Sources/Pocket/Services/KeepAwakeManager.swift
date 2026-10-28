@@ -238,6 +238,14 @@ final class KeepAwakeManager: ObservableObject {
         UserDefaults.standard.set(false, forKey: DefaultsKey.keepAwakeSwitchUsesUntil)
     }
 
+    /// Starts a session with no end, without changing the saved default
+    /// duration the panel's switch uses.
+    func activateIndefinitely() {
+        automationSuppressedUntilConditionsClear = false
+        activate(end: nil, trigger: .manual)
+        sessionMinutes = isActive ? 0 : nil
+    }
+
     func activate(until date: Date) {
         guard date > Date() else { return }
         automationSuppressedUntilConditionsClear = false

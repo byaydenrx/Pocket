@@ -128,7 +128,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .display: return [.display]
 
         case .downloads: return [.downloads]
-        case .keepAwake: return [.keepAwake]
+        case .keepAwake: return [] // Pocket: shown inside Quick Toggles
         // Pocket: the Display tab replaces this one.
         case .brightness: return []
         case .mixer: return [.mixer, .audioPriority]
@@ -142,7 +142,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
                                 .finderCutPaste, .autoQuit,
                                 .shelf, .windowMaximizer, .dockPreview, .keyboardDebounce, .dockClick, .spacesOrder,
                                 .middleClick, .textSnippets, .superKey, .radialMenu, .mouseClickDebounce, .notch]
-        case .toggles: return [.quickToggles, .micMute]
+        case .toggles: return [.quickToggles, .micMute, .keepAwake]
         case .wallpaper: return [.wallpaper]
         }
     }

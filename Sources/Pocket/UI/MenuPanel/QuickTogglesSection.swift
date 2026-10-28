@@ -17,8 +17,17 @@ struct QuickTogglesSection: View {
                      collapsible: collapsible,
                      supportsEditing: true,
                      resetAction: QuickTogglesList.resetPanelDefaults) { editing in
-            QuickTogglesList(editing: editing, draggingItem: $draggingItem) {
-                appDelegate()?.closePopover()
+            VStack(alignment: .leading, spacing: 12) {
+                // Keep Awake lives here as a dropdown (its header collapses it).
+                if AppFeature.keepAwake.isAvailable {
+                    KeepAwakeCard(collapsible: true)
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.primary.opacity(0.05)))
+                }
+                QuickTogglesList(editing: editing, draggingItem: $draggingItem) {
+                    appDelegate()?.closePopover()
+                }
             }
             // Actions here activate other apps (the Finder restarting, System
             // Events, the Trash confirmation), which would dismiss the panel

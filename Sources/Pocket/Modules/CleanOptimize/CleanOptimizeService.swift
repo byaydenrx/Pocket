@@ -164,13 +164,16 @@ struct CleanOptimizeView: View {
             Picker("", selection: $tab) {
                 Text("Clean").tag(0)
                 Text("Optimize").tag(1)
+                if AppFeature.storageAnalyzer.isAvailable { Text("Storage").tag(2) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            if tab == 0 {
-                CleanerView(compact: true)
-            } else {
-                OptimizeList()
+            switch tab {
+            case 0: CleanerView(compact: true)
+            case 1: OptimizeList()
+            default:
+                StorageAnalyzerSettings(compact: true)
+                    .frame(height: 400)
             }
         }
     }

@@ -124,6 +124,8 @@ struct MixerSection: View {
                 Label {
                     Text(l10n.s.mixerSystemOutputTitle)
                         .font(.system(size: 11.5, weight: .medium))
+                        .lineLimit(1)
+                        .fixedSize()
                 } icon: {
                     Image(systemName: "speaker.wave.2.fill")
                         .font(.system(size: 10.5, weight: .semibold))
@@ -151,7 +153,7 @@ struct MixerSection: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .controlSize(.small)
-                .frame(width: 164)
+                .frame(width: 150)
                 .disabled(universalOutputDevices.isEmpty)
                 .help(l10n.s.mixerSystemOutputTooltip)
             }
@@ -202,6 +204,8 @@ struct MixerSection: View {
                 Label {
                     Text(l10n.s.mixerSoundEffectsOutputTitle)
                         .font(.system(size: 11.5, weight: .medium))
+                        .lineLimit(1)
+                        .fixedSize()
                 } icon: {
                     Image(systemName: "bell.fill")
                         .font(.system(size: 10.5, weight: .semibold))
@@ -230,7 +234,7 @@ struct MixerSection: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .controlSize(.small)
-                .frame(width: 164)
+                .frame(width: 150)
                 .disabled(systemSoundOutputDevices.isEmpty)
                 .help(l10n.s.mixerSoundEffectsOutputTooltip)
             }
@@ -294,6 +298,8 @@ struct MixerSection: View {
                 Label {
                     Text(l10n.s.mixerInputTitle)
                         .font(.system(size: 11.5, weight: .medium))
+                        .lineLimit(1)
+                        .fixedSize()
                 } icon: {
                     Image(systemName: "mic.fill")
                         .font(.system(size: 10.5, weight: .semibold))
@@ -320,7 +326,7 @@ struct MixerSection: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .controlSize(.small)
-                .frame(width: 164)
+                .frame(width: 150)
                 .disabled(inputManager.inputDevices.isEmpty)
                 .help(l10n.s.mixerInputTooltip)
             }
@@ -435,13 +441,13 @@ struct MixerSection: View {
 #if compiler(>=6.2)
         if #available(macOS 26.0, *), glassEnabled {
             GlassEffectContainer(spacing: 8) {
-                rowList
+                VStack(spacing: 8) { rowList }
             }
         } else {
-            rowList
+            VStack(spacing: 8) { rowList }
         }
 #else
-        rowList
+        VStack(spacing: 8) { rowList }
 #endif
     }
 
@@ -912,37 +918,32 @@ private struct MixerRow: View {
     /// a thin slider whose knob shows on hover, the percentage, mute and the
     /// output menu. Warnings sit under it when there are any.
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Circle()
-                    .fill(app.isPlaying ? PanelMetricColor.green(for: colorScheme) : Color.primary.opacity(0.15))
-                    .frame(width: 5, height: 5)
                 Image(nsImage: ResponsibleProcess.icon(for: app.ownerPid, pointSize: 22))
                     .resizable()
                     .frame(width: 22, height: 22)
+                    .overlay(alignment: .bottomTrailing) {
+                        if app.isPlaying {
+                            Circle().fill(PanelMetricColor.green(for: colorScheme))
+                                .frame(width: 7, height: 7)
+                                .overlay(Circle().stroke(Color.black.opacity(0.25), lineWidth: 0.5))
+                                .offset(x: 2, y: 2)
+                        }
+                    }
                 Text(app.name)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .medium))
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .frame(width: 78, alignment: .leading)
                     .help(app.name)
                 if isPinned {
                     Image(systemName: "pin.fill").font(.system(size: 8)).foregroundStyle(.secondary)
                 }
-                if app.isBypassed {
-                    Text(app.supportsVolumeOverride ? sharingStrings.protectedCaption : l10n.s.mixerBypassedCaption)
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                    Spacer(minLength: 0)
-                } else {
-                    FineTuneStyleSlider(value: volumeBinding, maximum: AppVolumeMixer.maxVolume,
-                                        tint: isBoosting ? boostColor : normalTint)
-                        .overlay(SliderScrollArea(value: volumeBinding, range: 0...AppVolumeMixer.maxVolume))
-                        .accessibilityLabel(app.name)
+                Spacer(minLength: 6)
+                if !app.isBypassed {
                     EditableVolumePercent(currentPercent: MixerRoutingSupport.displayPercent(forVolume: app.volume),
                                           maximumPercent: Int(AppVolumeMixer.maxVolume * 100),
-                                          width: 36,
+                                          width: 40,
                                           editorID: "app:\(app.id)",
                                           editingID: $editingVolumeID,
                                           accessibilityLabel: app.name) {
@@ -973,6 +974,17 @@ private struct MixerRow: View {
                         .help(arrangementStrings.actions)
                 }
             }
+            if app.isBypassed {
+                Text(app.supportsVolumeOverride ? sharingStrings.protectedCaption : l10n.s.mixerBypassedCaption)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                FineTuneStyleSlider(value: volumeBinding, maximum: AppVolumeMixer.maxVolume,
+                                    tint: isBoosting ? boostColor : normalTint)
+                    .overlay(SliderScrollArea(value: volumeBinding, range: 0...AppVolumeMixer.maxVolume))
+                    .accessibilityLabel(app.name)
+            }
             if !app.isBypassed, app.supportsVolumeOverride {
                 Label(sharingStrings.sharingWarning, systemImage: "exclamationmark.triangle")
                     .font(.system(size: 9.5)).foregroundStyle(.secondary)
@@ -984,8 +996,8 @@ private struct MixerRow: View {
                     .lineLimit(2)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Color.primary.opacity(hovering ? 0.08 : 0.05))

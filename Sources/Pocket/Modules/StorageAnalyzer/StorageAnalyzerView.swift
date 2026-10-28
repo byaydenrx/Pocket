@@ -5,6 +5,8 @@ import AppKit
 import SwiftUI
 
 struct StorageAnalyzerSettings: View {
+    /// Inside the menu panel: tighter padding.
+    var compact = false
     @ObservedObject private var service = StorageAnalyzerService.shared
     @State private var tab = Tab.folders
     @State private var pendingTrash: StorageNode?
@@ -67,7 +69,7 @@ struct StorageAnalyzerSettings: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .padding(20)
+        .padding(compact ? 0 : 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear { service.refreshVolumes() }
         .onDisappear { service.release() }
@@ -101,7 +103,7 @@ struct StorageAnalyzerSettings: View {
                                 .foregroundStyle(.secondary)
                         }
                         .padding(10)
-                        .frame(width: 210, alignment: .leading)
+                        .frame(width: compact ? 170 : 210, alignment: .leading)
                         .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.primary.opacity(0.05)))
                     }
                     .buttonStyle(.plain)

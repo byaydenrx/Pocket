@@ -176,6 +176,21 @@ struct SystemSection: View {
     }
 
     @AppStorage("monitorSystemNetwork") private var sysNetwork = true
+    @AppStorage(DefaultsKey.networkSpeedUnit) private var networkSpeedUnit = NetworkSpeedUnit.bytes
+
+    /// Same reading and units as the Network tab, in the System tab's size.
+    private func networkRate(_ icon: String, _ label: String, _ value: Double?, _ color: Color) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(color)
+            Text(value.map { MetricFormat.networkRate($0, inBits: networkSpeedUnit == .bits) } ?? l10n.s.networkMeasuring)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .contentTransition(.numericText())
+        }
+        .help(label)
+    }
 
     /// Live download and upload, so the System tab has the whole picture.
     @ViewBuilder
@@ -183,22 +198,15 @@ struct SystemSection: View {
         if !sysNetwork {
             PanelHiddenItemRow(title: "Network", systemImage: "network", isVisible: $sysNetwork)
         } else {
-            HStack(spacing: 10) {
-                Image(systemName: "network")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
-                Label(ByteCountFormatter.string(fromByteCount: Int64(monitor.snapshot.netDownBytesPerSec ?? 0), countStyle: .file) + "/s",
-                      systemImage: "arrow.down")
-                Label(ByteCountFormatter.string(fromByteCount: Int64(monitor.snapshot.netUpBytesPerSec ?? 0), countStyle: .file) + "/s",
-                      systemImage: "arrow.up")
-                Spacer()
+            HStack(spacing: 14) {
+                networkRate("arrow.down", l10n.s.networkDownload, monitor.snapshot.netDownBytesPerSec, .accentColor)
+                networkRate("arrow.up", l10n.s.networkUpload, monitor.snapshot.netUpBytesPerSec,
+                            PanelMetricColor.green(for: colorScheme))
+                Spacer(minLength: 0)
                 if editing {
                     PanelInlineHideButton(isVisible: $sysNetwork)
                 }
             }
-            .labelStyle(.titleAndIcon)
-            .font(.system(size: 10.5, weight: .medium).monospacedDigit())
-            .foregroundStyle(.secondary)
         }
     }
 

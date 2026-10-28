@@ -117,7 +117,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         statusController.onRightClick = { [weak self] button in
             if AppFeature.keepAwake.isAvailable
                 && UserDefaults.standard.bool(forKey: DefaultsKey.keepAwakeRightClickToggle) {
-                KeepAwakeManager.shared.toggle()
+                // Pocket: right-click means "stay awake until I say so".
+                let awake = KeepAwakeManager.shared
+                if awake.isActive {
+                    awake.toggle()
+                } else {
+                    awake.activateIndefinitely()
+                }
             } else {
                 self?.showContextMenu(from: button)
             }
