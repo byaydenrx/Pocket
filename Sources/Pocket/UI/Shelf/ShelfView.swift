@@ -53,8 +53,8 @@ struct ShelfView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(isDropTargeted ? Color.accentColor : Color.white.opacity(0.12),
-                              lineWidth: isDropTargeted ? 2 : 1)
+                .strokeBorder(isDropTargeted ? Color.accentColor : Color.white.opacity(0.10),
+                              lineWidth: isDropTargeted ? 2 : 0.8)
         )
         .overlay(alignment: .topLeading) {
             topMoveHandle
@@ -63,6 +63,9 @@ struct ShelfView: View {
         .animation(.easeOut(duration: 0.18), value: shelf.items)
         .onHover { inside in
             shelf.setPointerInsidePanel(inside)
+        }
+        .onChange(of: shelf.dropTargeted) { _, targeted in
+            imageTools.dragKind = targeted ? ShelfMediaKind.dominant(in: ShelfDragFiles.current()) : nil
         }
 
     }
@@ -74,13 +77,9 @@ struct ShelfView: View {
     @ObservedObject private var imageTools = ShelfImageToolsModel.shared
     @AppStorage(ShelfImageToolsModel.enabledKey) private var imageToolsEnabled = true
 
-    /// Tack's strip: while images sit on the shelf, while one is dragged over
-    /// it, and while a job or its result is showing.
-    private var showsImageTools: Bool {
-        guard imageToolsEnabled else { return false }
-        return imageTools.isBusy || imageTools.hasResults || shelf.dropTargeted
-            || !imageTools.shelfImages(shelf).isEmpty
-    }
+    /// The file tools are part of the shelf whenever they are on: a fixed
+    /// height, so the window is sized for them once and nothing jumps.
+    private var showsImageTools: Bool { imageToolsEnabled }
 
     /// The official mark, large and faint in the corner: unmistakably ours,
     /// never loud enough to fight the tiles.
@@ -131,17 +130,8 @@ struct ShelfView: View {
             Image(systemName: shelf.isPinned ? "pin.fill" : "pin")
                 .font(.system(size: 12, weight: .semibold))
                 .frame(width: 30, height: 30)
-                .background(
-                    Circle().fill(shelf.isPinned
-                                  ? Color.accentColor.opacity(pinButtonHovered ? 0.30 : 0.20)
-                                  : Color.white.opacity(pinButtonHovered ? 0.18 : 0.11))
-                )
-                .overlay(
-                    Circle().strokeBorder(shelf.isPinned
-                                          ? Color.accentColor.opacity(0.65)
-                                          : Color.white.opacity(pinButtonHovered ? 0.75 : 0.32),
-                                          lineWidth: 1)
-                )
+                .pocketGlassCircle(highlighted: pinButtonHovered)
+                .overlay(Circle().fill(Color.accentColor.opacity(shelf.isPinned ? 0.25 : 0)))
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -156,14 +146,7 @@ struct ShelfView: View {
             Image(systemName: dismissSystemImage)
                 .font(.system(size: 13, weight: .semibold))
                 .frame(width: 30, height: 30)
-                .background(
-                    Circle()
-                        .fill(Color.white.opacity(closeButtonHovered ? 0.18 : 0.11))
-                )
-                .overlay(
-                    Circle()
-                        .strokeBorder(Color.white.opacity(closeButtonHovered ? 0.75 : 0.32), lineWidth: 1)
-                )
+                .pocketGlassCircle(highlighted: closeButtonHovered)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
